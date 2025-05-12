@@ -14,9 +14,8 @@ struct WelcomeView: View {
     private func dismissWelcome() {
         print("dismissWelcome called, isSubscribed: \(subscriptionManager.isSubscribed), dontShowWelcomeAgain: \(dontShowWelcomeAgain)")
         if subscriptionManager.isSubscribed {
-            // Always dismiss when subscribed, regardless of toggle state
             print("Dismissing welcome screen")
-            isPresented = false  // This will dismiss the sheet
+            isPresented = false
         } else {
             print("Cannot dismiss - not subscribed")
         }
@@ -318,14 +317,17 @@ struct WelcomeView: View {
                         .padding(.top, 10)
                         
                         // Don't show again toggle - Only show if subscribed
-                        Toggle(isOn: $dontShowWelcomeAgain) {
+                        Toggle(isOn: Binding(
+                            get: { dontShowWelcomeAgain },
+                            set: { newValue in
+                                print("Toggle changed to: \(newValue)")
+                                dontShowWelcomeAgain = newValue
+                                // Don't dismiss automatically - let user use Get Started button
+                            }
+                        )) {
                             Text("Don't show this screen again")
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
-                        }
-                        .onChange(of: dontShowWelcomeAgain) { newValue in
-                            print("Toggle changed to: \(newValue)")
-                            // Just let the @AppStorage handle the persistence
                         }
                         .padding(.horizontal)
                         .padding(.bottom, 20)

@@ -12,8 +12,8 @@ struct AnubisSDSApp: App {
     @AppStorage("dontShowWelcomeAgain") private var dontShowWelcomeAgain = false
     @StateObject private var subscriptionManager = SubscriptionManager.shared
     @State private var isInitialized = false
-    @State private var showWelcome = false
     @State private var shouldRestart = false
+    @State private var hasShownWelcome = false  // Track if we've shown welcome screen this session
     
     init() {
         print("App launching")
@@ -42,20 +42,35 @@ struct AnubisSDSApp: App {
                     RestartView()
                 } else if !isInitialized {
                     InitializationView()
-                } else if !subscriptionManager.isSubscribed {
-                    ContentView()
-                        .sheet(isPresented: .constant(true)) {
-                            WelcomeView(isPresented: .constant(true))
-                        }
-                } else if dontShowWelcomeAgain {
-                    ContentView()
                 } else {
                     ContentView()
-                        .sheet(isPresented: $showWelcome) {
-                            WelcomeView(isPresented: $showWelcome)
-                        }
-                        .onAppear {
-                            showWelcome = true
+                        .sheet(isPresented: Binding(
+                            get: { 
+                                if !subscriptionManager.isSubscribed {
+                                    return true
+                                }
+                                // Only show welcome if we haven't shown it this session and haven't disabled it
+                                return !hasShownWelcome && !dontShowWelcomeAgain
+                            },
+                            set: { newValue in
+                                if !newValue {
+                                    hasShownWelcome = true
+                                }
+                            }
+                        )) {
+                            WelcomeView(isPresented: Binding(
+                                get: { 
+                                    if !subscriptionManager.isSubscribed {
+                                        return true
+                                    }
+                                    return !hasShownWelcome && !dontShowWelcomeAgain
+                                },
+                                set: { newValue in
+                                    if !newValue {
+                                        hasShownWelcome = true
+                                    }
+                                }
+                            ))
                         }
                 }
             }
