@@ -396,10 +396,12 @@ struct FluidDetailView: View {
     }
     
     private func saveChanges() {
-        print("💾 Starting save process for fluid...")
+        print("\n=== Starting Save Process ===")
+        print("💾 Attempting to save changes for fluid...")
         
         // Get the fluid name (this is our unique identifier)
         let fluidName = getValue(for: "FLUID", in: row, headers: headers)
+        print("📝 Fluid Name: \(fluidName)")
         
         // Convert edited values to database updates
         var updates: [String: Any] = [:]
@@ -407,27 +409,39 @@ struct FluidDetailView: View {
             // Skip empty values to avoid overwriting with empty strings
             if !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 updates[field] = value
+                print("📝 Field to update: \(field) = \(value)")
             }
         }
         
         if updates.isEmpty {
-            print("No changes to save")
+            print("⚠️ No changes to save - updates dictionary is empty")
             isEditing = false
             return
         }
         
+        print("💾 Attempting database update with \(updates.count) fields...")
+        
         // Attempt to save the changes
         if DatabaseManager.shared.updateFluid(fluidName: fluidName, updates: updates) {
             print("✅ Save successful")
+            print("📢 Posting FluidsChanged notification")
             isEditing = false
             editedValues.removeAll()
             
             // Post notification to refresh the fluids list
             NotificationCenter.default.post(name: NSNotification.Name("FluidsChanged"), object: nil)
+            
+            // Force cache update
+            print("🔄 Forcing cache update...")
+            DatabaseManager.shared.updateFluidsCache(force: true)
+            
+            print("=== Save Process Complete ===\n")
         } else {
             print("❌ Save failed")
+            print("⚠️ Database update returned false")
             errorMessage = "Failed to save changes to database"
             showError = true
+            print("=== Save Process Failed ===\n")
         }
     }
 }

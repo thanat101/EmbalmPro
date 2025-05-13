@@ -96,7 +96,7 @@ struct SDSSectionDetailView: View {
 // MARK: - SDS Detail View Model
 @MainActor
 class SDSDetailViewModel: ObservableObject {
-    let fluid: Fluid
+    @Published var fluid: Fluid
     @Published var editedValues: [String: String] = [:]
     @Published var editingSection: String? = nil
     @Published var showError = false
@@ -104,6 +104,10 @@ class SDSDetailViewModel: ObservableObject {
     
     init(fluid: Fluid) {
         self.fluid = fluid
+    }
+    
+    func updateFluid(_ newFluid: Fluid) {
+        self.fluid = newFluid
     }
     
     func getValueForField(_ field: String) -> String? {
@@ -193,6 +197,9 @@ class SDSDetailViewModel: ObservableObject {
             
             // Post notification to refresh the fluids list
             NotificationCenter.default.post(name: NSNotification.Name("FluidsChanged"), object: nil)
+            // Force cache update
+            print("🔄 Forcing cache update after SDS section save...")
+            DatabaseManager.shared.updateFluidsCache(force: true)
         } else {
             print("❌ Save failed for section: \(section)")
             errorMessage = "Failed to save changes to database"
@@ -572,6 +579,25 @@ struct SDSDetailView: View {
         _viewModel = StateObject(wrappedValue: SDSDetailViewModel(fluid: fluid))
     }
     
+    private func refreshData() {
+        print("🔄 Refreshing SDS detail view data...")
+        // Force a cache update first to ensure we have the latest data
+        DatabaseManager.shared.updateFluidsCache(force: true)
+        
+        // Get fresh data from the database
+        if let cached = DatabaseManager.shared.getCachedFluids() {
+            if let updatedFluid = cached.fluids.first(where: { $0.name == viewModel.fluid.name }) {
+                print("📦 Updating view model with fresh data for fluid: \(updatedFluid.name)")
+                // Update the view model with the fresh data
+                viewModel.updateFluid(updatedFluid)
+            } else {
+                print("⚠️ Could not find updated fluid in cache: \(viewModel.fluid.name)")
+            }
+        } else {
+            print("❌ Failed to get cached fluids during refresh")
+        }
+    }
+    
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 4) {
@@ -599,6 +625,9 @@ struct SDSDetailView: View {
                                 if DatabaseManager.shared.updateFluid(fluidName: viewModel.fluid.name, updates: updates) {
                                     // Post notification to refresh the fluids list
                                     NotificationCenter.default.post(name: NSNotification.Name("FluidsChanged"), object: nil)
+                                    // Force cache update
+                                    print("🔄 Forcing cache update after SDS save...")
+                                    DatabaseManager.shared.updateFluidsCache(force: true)
                                 } else {
                                     viewModel.errorMessage = "Failed to save changes. Please try again."
                                     viewModel.showError = true
@@ -621,6 +650,10 @@ struct SDSDetailView: View {
         }
         .sheet(isPresented: $showFullSDS) {
             FullSDSSheetView(viewModel: viewModel, isPresented: $showFullSDS)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("FluidsChanged"))) { _ in
+            print("📢 Received FluidsChanged notification in SDS detail view")
+            refreshData()
         }
     }
 }

@@ -363,13 +363,19 @@ class DatabaseManager {
     }
     
     // Optimize the cache update to be more efficient
-    func updateFluidsCache() {
+    func updateFluidsCache(force: Bool = false) {
         print("\n=== Updating Fluids Cache ===")
         
-        // Check if we have a valid cache
-        if getCachedFluids() != nil {
+        // Check if we have a valid cache and not forcing refresh
+        if !force, let _ = getCachedFluids() {
             print("Using existing cache (less than 5 minutes old)")
             return
+        }
+        
+        // If forcing refresh or no valid cache, delete existing cache
+        if let cacheURL = cacheURL, FileManager.default.fileExists(atPath: cacheURL.path) {
+            try? FileManager.default.removeItem(at: cacheURL)
+            print("🗑️ Deleted existing cache")
         }
         
         let query = """

@@ -10,34 +10,47 @@ class FluidsViewModel: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var error: String?
     
-    func loadData() {
+    func loadData(forceRefresh: Bool = false) {
         print("\n=== Loading Fluids ===")
+        print("🔄 Starting data load process...")
         isLoading = true
         error = nil
         
+        // If forcing refresh, update cache first
+        if forceRefresh {
+            print("🔄 Force refreshing cache...")
+            DatabaseManager.shared.updateFluidsCache(force: true)
+        }
+        
         // Try to get from cache first
         if let cached = DatabaseManager.shared.getCachedFluids() {
-            print("Using cached fluids data")
+            print("📦 Using cached fluids data")
+            print("📊 Cache contains \(cached.fluids.count) fluids")
             fluids = cached.fluids
             headers = cached.headers
             rows = cached.rows
             isLoading = false
-            print("=== Finished Loading Fluids (from cache) ===\n")
+            print("✅ Finished Loading Fluids (from cache)")
+            print("=== Cache Load Complete ===\n")
             return
         }
         
+        print("🔄 Cache not available, loading from database...")
         // If not in cache, load from database and update cache
         DatabaseManager.shared.updateFluidsCache()
         if let cached = DatabaseManager.shared.getCachedFluids() {
+            print("📦 Successfully loaded from database")
+            print("📊 Loaded \(cached.fluids.count) fluids")
             fluids = cached.fluids
             headers = cached.headers
             rows = cached.rows
         } else {
+            print("❌ Failed to load fluids from database")
             error = "Failed to load fluids from database"
         }
         
         isLoading = false
-        print("=== Finished Loading Fluids ===\n")
+        print("=== Database Load Complete ===\n")
     }
     
     func getFluidDetails(for fluid: Fluid) -> (row: [String], headers: [String])? {
@@ -113,8 +126,9 @@ struct FluidsView: View {
         selectedUse = "All"
         // Clear search text
         searchText = ""
-        // Reload data
-        viewModel.loadData()
+        // Force cache refresh and reload data
+        print("Force reloading fluids cache for reset...")
+        viewModel.loadData(forceRefresh: true)
     }
     
     var body: some View {
@@ -132,7 +146,7 @@ struct FluidsView: View {
                         // Reload button
                         Button(action: {
                             print("Force reloading fluids cache...")
-                            DatabaseManager.shared.updateFluidsCache()
+                            DatabaseManager.shared.updateFluidsCache(force: true)
                             viewModel.loadData()
                         }) {
                             Image(systemName: "arrow.clockwise")

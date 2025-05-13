@@ -46,7 +46,7 @@ struct SDSView: View {
                         // Reload button
                         Button(action: {
                             print("Force reloading SDS data...")
-                            DatabaseManager.shared.updateFluidsCache()
+                            DatabaseManager.shared.updateFluidsCache(force: true)
                             loadFluidsData()
                         }) {
                             Image(systemName: "arrow.clockwise")
