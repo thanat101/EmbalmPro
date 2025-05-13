@@ -194,6 +194,13 @@ struct FavoritesView: View {
             }
             .navigationBarHidden(true)
             .background(AppStyle.backgroundColor)
+            .background(
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                    }
+            )
         }
         .onAppear {
             viewModel.loadData()

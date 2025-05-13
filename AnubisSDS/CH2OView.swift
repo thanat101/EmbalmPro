@@ -58,13 +58,20 @@ struct CH2OView: View {
         NavigationView {
             ScrollView {
                 VStack(spacing: 20) {
-                    // Title
-                    Text("CH₂O Calculator")
-                        .font(AppStyle.Typography.title)
-                        .foregroundColor(AppStyle.textColor)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal)
-                        .padding(.bottom, 2)
+                    // Header section
+                    VStack(spacing: AppStyle.Spacing.small) {
+                        HStack {
+                            Spacer()
+                            
+                            Text("CH₂O Calculator")
+                                .font(AppStyle.Typography.subheadline)
+                                .foregroundColor(AppStyle.textColor)
+                            
+                            Spacer()
+                        }
+                        .padding(.horizontal, AppStyle.Spacing.medium)
+                        .padding(.top, AppStyle.Spacing.small)
+                    }
                     
                     // Body Info Section
                     BodyInfoSection(viewModel: viewModel)
@@ -210,11 +217,16 @@ struct CH2OView: View {
                 }
                 .padding()
             }
+            .simultaneousGesture(
+                DragGesture(minimumDistance: 5)
+                    .onChanged { _ in
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                    }
+            )
             .onTapGesture {
                 UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
             }
-            .navigationTitle("CH₂O Calculator")
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarHidden(true)
             .onAppear {
                 // Initialize weight on appear
                 viewModel.bodyWeight = String(format: "%.0f", viewModel.sliderValue)

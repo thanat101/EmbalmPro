@@ -20,7 +20,7 @@ private struct CaseRowView: View {
                     .font(.headline)
                     .foregroundColor(.primary)
                 
-                VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 16) {
                     // Solution Strength
                     HStack(spacing: 4) {
                         Text("Solution:")
@@ -211,6 +211,13 @@ public struct CaseView: View {
             }
             .navigationBarHidden(true)
             .background(AppStyle.backgroundColor)
+            .background(
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                    }
+            )
         }
         .onAppear {
             viewModel.loadData()

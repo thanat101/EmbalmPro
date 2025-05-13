@@ -121,21 +121,21 @@ struct SDSView: View {
             }
             .navigationBarHidden(true)
             .background(AppStyle.backgroundColor)
-            .onAppear {
-                loadFluidsData()
-            }
-            .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("ResetNavigation"))) { _ in
-                shouldResetNavigation = true
-            }
-            .id(shouldResetNavigation)
             .background(
                 Color.clear
                     .contentShape(Rectangle())
                     .onTapGesture {
-                        hideKeyboard()
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
                     }
             )
         }
+        .onAppear {
+            loadFluidsData()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("ResetNavigation"))) { _ in
+            shouldResetNavigation = true
+        }
+        .id(shouldResetNavigation)
     }
     
     private func loadFluidsData() {
@@ -157,10 +157,6 @@ struct SDSView: View {
             showError = true
             errorMessage = "Failed to load fluids from database"
         }
-    }
-    
-    private func hideKeyboard() {
-        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 }
 
