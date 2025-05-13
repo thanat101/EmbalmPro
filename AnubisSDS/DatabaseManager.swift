@@ -11,6 +11,18 @@ class DatabaseManager {
     private static var cachedFluidsHeaders: [String] = []
     private static var cachedFluidsRows: [[String]] = []
     
+    // Add CacheData struct for proper encoding/decoding
+    private struct CacheData: Codable {
+        let fluids: [Fluid]
+        let headers: [String]
+        let rows: [[String]]
+        let timestamp: Date
+    }
+    
+    private var cacheURL: URL? {
+        FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first?.appendingPathComponent("fluidsCache.json")
+    }
+    
     private init() {
         setupDatabase()
     }
@@ -327,30 +339,59 @@ class DatabaseManager {
     
     // Add method to get cached fluids
     func getCachedFluids() -> (fluids: [Fluid], headers: [String], rows: [[String]])? {
-        if let cached = DatabaseManager.cachedFluids {
-            return (cached, DatabaseManager.cachedFluidsHeaders, DatabaseManager.cachedFluidsRows)
+        guard let cacheURL = cacheURL,
+              let data = try? Data(contentsOf: cacheURL),
+              let cacheData = try? JSONDecoder().decode(CacheData.self, from: data) else {
+            return nil
+        }
+        
+        // Check if cache is older than 5 minutes
+        if Date().timeIntervalSince(cacheData.timestamp) > 300 { // 5 minutes
+            try? FileManager.default.removeItem(at: cacheURL)
+            return nil
+        }
+        
+        return (cacheData.fluids, cacheData.headers, cacheData.rows)
+    }
+    
+    // Add a method to get a single fluid from cache
+    func getCachedFluid(name: String) -> Fluid? {
+        if let cached = getCachedFluids() {
+            return cached.fluids.first { $0.name == name }
         }
         return nil
     }
     
-    // Add method to update cache
+    // Optimize the cache update to be more efficient
     func updateFluidsCache() {
         print("\n=== Updating Fluids Cache ===")
+        
+        // Check if we have a valid cache
+        if getCachedFluids() != nil {
+            print("Using existing cache (less than 5 minutes old)")
+            return
+        }
+        
         let query = """
             SELECT * FROM FLUID 
             ORDER BY FLUID ASC
         """
         
+        print("\n=== Executing Query ===")
+        print("Query: \(query)")
+        
         if let results = executeQuery(query) {
-            print("Raw query returned \(results.count) results")
+            print("Query prepared successfully")
+            print("Query returned \(results.count) rows")
+            print("==============================\n")
             
             if !results.isEmpty {
                 // Get headers from the first result
-                DatabaseManager.cachedFluidsHeaders = Array(results[0].keys).sorted()
+                let headers = Array(results[0].keys).sorted()
                 
-                // Convert results to rows
-                DatabaseManager.cachedFluidsRows = results.map { dict in
-                    DatabaseManager.cachedFluidsHeaders.map { header in
+                // Convert results to rows and fluids
+                let rows = results.map { dict in
+                    headers.map { header in
                         if let value = dict[header] {
                             if let stringValue = value as? String {
                                 return stringValue
@@ -364,17 +405,22 @@ class DatabaseManager {
                     }
                 }
                 
-                // Update fluids array
-                DatabaseManager.cachedFluids = results.compactMap { dictionary in
-                    if let fluid = Fluid(from: dictionary) {
-                        return fluid
-                    } else {
-                        print("Failed to create Fluid from dictionary: \(dictionary)")
-                        return nil
-                    }
-                }
+                let fluids = results.compactMap { Fluid(from: $0) }
                 
-                print("Successfully cached \(DatabaseManager.cachedFluids?.count ?? 0) fluids")
+                // Create and encode cache data
+                let cacheData = CacheData(fluids: fluids, headers: headers, rows: rows, timestamp: Date())
+                if let encodedData = try? JSONEncoder().encode(cacheData),
+                   let cacheURL = cacheURL {
+                    do {
+                        try encodedData.write(to: cacheURL)
+                        print("Raw query returned \(results.count) results")
+                        print("Successfully cached \(fluids.count) fluids")
+                    } catch {
+                        print("Failed to write cache to file: \(error)")
+                    }
+                } else {
+                    print("Failed to encode cache data or get cache URL")
+                }
             }
         }
         print("=== Finished Updating Fluids Cache ===\n")

@@ -20,7 +20,7 @@ private struct CaseRowView: View {
                     .font(.headline)
                     .foregroundColor(.primary)
                 
-                HStack(spacing: 16) {
+                VStack(alignment: .leading, spacing: 8) {
                     // Solution Strength
                     HStack(spacing: 4) {
                         Text("Solution:")

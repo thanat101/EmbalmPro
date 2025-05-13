@@ -233,24 +233,13 @@ struct FluidDetailView: View {
     @State private var isFavorite = false
     @State private var fluid: Fluid?
     @State private var debugStatus: String = ""
+    @State private var hasAttemptedLoad = false
     
     private func updateDebugStatus(_ message: String) {
+        #if DEBUG
         print(message)
         debugStatus = message
-    }
-    
-    private func tryLoadFluid() {
-        let fluidName = getValue(for: "FLUID", in: row, headers: headers)
-        if !fluidName.isEmpty {
-            if let newFluid = DatabaseManager.shared.getFluid(name: fluidName) {
-                print("📦 Fluid object created successfully for: \(fluidName)")
-                self.fluid = newFluid
-            } else {
-                print("❌ Failed to create fluid object for: \(fluidName)")
-            }
-        } else {
-            print("⚠️ Empty fluid name")
-        }
+        #endif
     }
     
     init(row: [String], headers: [String], conditionStrength: String? = nil) {
@@ -260,19 +249,32 @@ struct FluidDetailView: View {
         
         // Initialize isFavorite state
         let fluidName = getValue(for: "FLUID", in: row, headers: headers)
+        #if DEBUG
         print("🔍 Initializing FluidDetailView for fluid: \(fluidName)")
+        #endif
         
         if !fluidName.isEmpty {
             _isFavorite = State(initialValue: FavoritesManager.shared.isFavorite(fluidName: fluidName))
-            // Initialize fluid object
-            if let fluid = DatabaseManager.shared.getFluid(name: fluidName) {
-                print("📦 Fluid object created successfully for: \(fluidName)")
-                _fluid = State(initialValue: fluid)
+        }
+    }
+    
+    private func tryLoadFluid() {
+        // Only try to load if we haven't already and haven't attempted before
+        guard fluid == nil && !hasAttemptedLoad else { return }
+        
+        let fluidName = getValue(for: "FLUID", in: row, headers: headers)
+        if !fluidName.isEmpty {
+            hasAttemptedLoad = true  // Mark that we've attempted to load
+            // Try to get from cache first
+            if let cachedFluid = DatabaseManager.shared.getCachedFluid(name: fluidName) {
+                updateDebugStatus("📦 Using cached fluid object for: \(fluidName)")
+                self.fluid = cachedFluid
+            } else if let newFluid = DatabaseManager.shared.getFluid(name: fluidName) {
+                updateDebugStatus("📦 Created new fluid object for: \(fluidName)")
+                self.fluid = newFluid
             } else {
-                print("❌ Failed to create fluid object for: \(fluidName)")
+                updateDebugStatus("❌ Failed to create fluid object for: \(fluidName)")
             }
-        } else {
-            print("⚠️ Empty fluid name")
         }
     }
     
@@ -338,11 +340,8 @@ struct FluidDetailView: View {
                 )
                 .padding(.horizontal)
                 .onAppear {
-                    print("🔍 Main view appeared with fluid: \(fluid != nil ? "available" : "nil")")
-                    // Only try to load if fluid is nil and we haven't already tried in init
-                    if fluid == nil && !getValue(for: "FLUID", in: row, headers: headers).isEmpty {
-                        tryLoadFluid()
-                    }
+                    updateDebugStatus("🔍 Main view appeared with fluid: \(fluid != nil ? "available" : "nil")")
+                    tryLoadFluid()
                 }
             }
             .padding(.vertical, AppStyle.Spacing.medium)
