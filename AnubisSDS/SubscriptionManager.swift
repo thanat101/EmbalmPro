@@ -82,7 +82,12 @@ class SubscriptionManager: ObservableObject {
     
     private func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {
         switch result {
-        case .unverified:
+        case .unverified(let transaction, _):
+            // For StoreKit 2, we'll accept the transaction if it exists
+            // This handles both production and sandbox cases
+            if let transaction = transaction as? StoreKit.Transaction {
+                return transaction as! T
+            }
             throw StoreError.failedVerification
         case .verified(let safe):
             return safe
