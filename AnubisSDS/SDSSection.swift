@@ -62,7 +62,7 @@ public struct SDSSection: Identifiable {
         SDSSection(id: "3", title: "3. Composition/Information on Ingredients", content: nil, icon: "list.bullet.clipboard.fill"),
         SDSSection(id: "4", title: "4. First-Aid Measures", content: nil, icon: "cross.case.fill"),
         SDSSection(id: "5", title: "5. Fire-Fighting Measures", content: nil, icon: "flame.fill"),
-        SDSSection(id: "6", title: "6. Accidental Release Measures", content: nil, icon: "spill.fill"),
+        SDSSection(id: "6", title: "6. Accidental Release Measures", content: nil, icon: "exclamationmark.triangle.fill"),
         SDSSection(id: "7", title: "7. Handling and Storage", content: nil, icon: "hand.raised.fill"),
         SDSSection(id: "8", title: "8. Exposure Controls/Personal Protection", content: nil, icon: "person.fill.checkmark"),
         SDSSection(id: "9", title: "9. Physical and Chemical Properties", content: nil, icon: "atom"),

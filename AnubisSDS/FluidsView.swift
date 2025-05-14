@@ -282,6 +282,45 @@ struct FluidsView: View {
             viewModel.loadData()
         }
         .id(shouldResetNavigation)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                HStack {
+                    Text("Fluids Database")
+                        .font(AppStyle.Typography.subheadline)
+                        .foregroundColor(AppStyle.textColor)
+                    
+                    Spacer()
+                    
+                    // About button
+                    Button(action: {
+                        showWelcomeView = true
+                    }) {
+                        Text("About")
+                            .font(AppStyle.Typography.subheadline)
+                            .foregroundColor(AppStyle.primaryColor)
+                    }
+                    .fullScreenCover(isPresented: $showWelcomeView) {
+                        NavigationStack {
+                            WelcomeView(isPresented: Binding(
+                                get: { showWelcomeView },
+                                set: { showWelcomeView = $0 }
+                            ))
+                        }
+                    }
+                    
+                    // Reload button
+                    Button(action: {
+                        print("Force reloading fluids data...")
+                        DatabaseManager.shared.updateFluidsCache(force: true)
+                        viewModel.loadData()
+                    }) {
+                        Image(systemName: "arrow.clockwise")
+                            .foregroundColor(AppStyle.accentColor)
+                    }
+                }
+            }
+        }
     }
 }
 

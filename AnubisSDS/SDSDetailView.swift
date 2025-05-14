@@ -215,7 +215,7 @@ class SDSDetailViewModel: ObservableObject {
             ("3. Composition/Information on Ingredients", fluid.composition, "list.bullet.clipboard.fill"),
             ("4. First-Aid Measures", fluid.firstAid, "cross.case.fill"),
             ("5. Fire-Fighting Measures", fluid.fire, "flame.fill"),
-            ("6. Accidental Release Measures", fluid.accident, "spill.fill"),
+            ("6. Accidental Release Measures", fluid.accident, "exclamationmark.triangle.fill"),
             ("7. Handling and Storage", fluid.handling, "hand.raised.fill"),
             ("8. Exposure Controls/Personal Protection", fluid.exposure, "person.fill.checkmark"),
             ("9. Physical and Chemical Properties", fluid.properties, "atom"),
