@@ -157,68 +157,66 @@ public struct CaseView: View {
     }
     
     public var body: some View {
-        NavigationView {
-            VStack(spacing: 0) {
-                // Header section
-                VStack(spacing: AppStyle.Spacing.small) {
-                    Text("Case Analysis")
-                        .font(AppStyle.Typography.subheadline)
-                        .foregroundColor(AppStyle.textColor)
-                }
-                .padding(.top, AppStyle.Spacing.small)
-                
-                // Total count
-                HStack {
-                    Text("Total Cases: \(viewModel.conditionsData.count)")
-                        .font(AppStyle.Typography.subheadline)
-                        .foregroundColor(AppStyle.secondaryTextColor)
-                    Spacer()
-                }
-                .padding(.horizontal, AppStyle.Spacing.medium)
-                .padding(.top, AppStyle.Spacing.small)
-                
-                // Search bar
-                SearchBar(text: $searchText, placeholder: "Search cases...")
-                    .padding(.horizontal)
-                
-                if let error = viewModel.errorMessage {
-                    Text(error)
-                        .font(AppStyle.Typography.body)
-                        .foregroundColor(.red)
-                        .padding(AppStyle.Spacing.medium)
-                        .cardStyle()
-                        .padding(.horizontal, AppStyle.Spacing.medium)
-                        .padding(.top, AppStyle.Spacing.small)
-                } else if viewModel.conditionsData.isEmpty {
-                    Text("No cases available")
-                        .font(AppStyle.Typography.body)
-                        .foregroundColor(AppStyle.secondaryTextColor)
-                        .padding(AppStyle.Spacing.medium)
-                        .cardStyle()
-                        .padding(.horizontal, AppStyle.Spacing.medium)
-                        .padding(.top, AppStyle.Spacing.small)
-                } else {
-                    List {
-                        ForEach(filteredRows, id: \.self) { row in
-                            CaseRowView(row: row, headers: viewModel.headers)
-                        }
-                    }
-                    .listStyle(PlainListStyle())
-                    .background(AppStyle.backgroundColor)
-                }
-                
+        VStack(spacing: 0) {
+            // Header section
+            VStack(spacing: AppStyle.Spacing.small) {
+                Text("Case Analysis")
+                    .font(AppStyle.Typography.subheadline)
+                    .foregroundColor(AppStyle.textColor)
+            }
+            .padding(.top, AppStyle.Spacing.small)
+            
+            // Total count
+            HStack {
+                Text("Total Cases: \(viewModel.conditionsData.count)")
+                    .font(AppStyle.Typography.subheadline)
+                    .foregroundColor(AppStyle.secondaryTextColor)
                 Spacer()
             }
-            .navigationBarHidden(true)
-            .background(AppStyle.backgroundColor)
-            .background(
-                Color.clear
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+            .padding(.horizontal, AppStyle.Spacing.medium)
+            .padding(.top, AppStyle.Spacing.small)
+            
+            // Search bar
+            SearchBar(text: $searchText, placeholder: "Search cases...")
+                .padding(.horizontal)
+            
+            if let error = viewModel.errorMessage {
+                Text(error)
+                    .font(AppStyle.Typography.body)
+                    .foregroundColor(.red)
+                    .padding(AppStyle.Spacing.medium)
+                    .cardStyle()
+                    .padding(.horizontal, AppStyle.Spacing.medium)
+                    .padding(.top, AppStyle.Spacing.small)
+            } else if viewModel.conditionsData.isEmpty {
+                Text("No cases available")
+                    .font(AppStyle.Typography.body)
+                    .foregroundColor(AppStyle.secondaryTextColor)
+                    .padding(AppStyle.Spacing.medium)
+                    .cardStyle()
+                    .padding(.horizontal, AppStyle.Spacing.medium)
+                    .padding(.top, AppStyle.Spacing.small)
+            } else {
+                List {
+                    ForEach(filteredRows, id: \.self) { row in
+                        CaseRowView(row: row, headers: viewModel.headers)
                     }
-            )
+                }
+                .listStyle(PlainListStyle())
+                .background(AppStyle.backgroundColor)
+            }
+            
+            Spacer()
         }
+        .navigationBarHidden(true)
+        .background(AppStyle.backgroundColor)
+        .background(
+            Color.clear
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                }
+        )
         .onAppear {
             viewModel.loadData()
         }

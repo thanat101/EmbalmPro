@@ -44,7 +44,7 @@ struct AnubisSDSApp: App {
                     InitializationView()
                 } else {
                     ContentView()
-                        .sheet(isPresented: Binding(
+                        .fullScreenCover(isPresented: Binding(
                             get: { 
                                 if !subscriptionManager.isSubscribed {
                                     return true
@@ -58,19 +58,21 @@ struct AnubisSDSApp: App {
                                 }
                             }
                         )) {
-                            WelcomeView(isPresented: Binding(
-                                get: { 
-                                    if !subscriptionManager.isSubscribed {
-                                        return true
+                            NavigationStack {
+                                WelcomeView(isPresented: Binding(
+                                    get: { 
+                                        if !subscriptionManager.isSubscribed {
+                                            return true
+                                        }
+                                        return !hasShownWelcome && !dontShowWelcomeAgain
+                                    },
+                                    set: { newValue in
+                                        if !newValue {
+                                            hasShownWelcome = true
+                                        }
                                     }
-                                    return !hasShownWelcome && !dontShowWelcomeAgain
-                                },
-                                set: { newValue in
-                                    if !newValue {
-                                        hasShownWelcome = true
-                                    }
-                                }
-                            ))
+                                ))
+                            }
                         }
                 }
             }

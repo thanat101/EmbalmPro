@@ -287,18 +287,13 @@ struct WelcomeView: View {
                     .shadow(radius: 2)
                     
                     // User Guide Button
-                    Button(action: {
-                        showUserGuide = true
-                    }) {
+                    NavigationLink(destination: UserGuideView()) {
                         Text("View User Guide")
                             .font(.subheadline)
                             .foregroundColor(.white)
                             .frame(width: 160, height: 36)
                             .background(Color.blue)
                             .cornerRadius(8)
-                    }
-                    .sheet(isPresented: $showUserGuide) {
-                        UserGuideView()
                     }
                     
                     // Get Started Button - Only show if subscribed
@@ -322,7 +317,6 @@ struct WelcomeView: View {
                             set: { newValue in
                                 print("Toggle changed to: \(newValue)")
                                 dontShowWelcomeAgain = newValue
-                                // Don't dismiss automatically - let user use Get Started button
                             }
                         )) {
                             Text("Don't show this screen again")
@@ -342,6 +336,13 @@ struct WelcomeView: View {
                         Button("Get Started") {
                             print("Toolbar Get Started tapped")
                             dismissWelcome()
+                        }
+                    }
+                }
+                ToolbarItem(placement: .navigationBarLeading) {
+                    if !isPresented {
+                        Button("Back") {
+                            dismiss()
                         }
                     }
                 }

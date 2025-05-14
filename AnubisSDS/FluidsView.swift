@@ -132,212 +132,145 @@ struct FluidsView: View {
     }
     
     var body: some View {
-        NavigationView {
-            VStack(spacing: 0) {
-                // Header section
-                VStack(spacing: AppStyle.Spacing.small) {
-                    HStack {
-                        Text("Fluid Database")
+        VStack(spacing: 0) {
+            // Header section
+            VStack(spacing: AppStyle.Spacing.small) {
+                HStack {
+                    Text("Fluids Database")
+                        .font(AppStyle.Typography.subheadline)
+                        .foregroundColor(AppStyle.textColor)
+                    
+                    Spacer()
+                    
+                    // About button
+                    Button(action: {
+                        showWelcomeView = true
+                    }) {
+                        Text("About")
                             .font(AppStyle.Typography.subheadline)
-                            .foregroundColor(AppStyle.textColor)
-                        
-                        Spacer()
-                        
-                        // Reload button
-                        Button(action: {
-                            print("Force reloading fluids cache...")
-                            DatabaseManager.shared.updateFluidsCache(force: true)
-                            viewModel.loadData()
-                        }) {
-                            Image(systemName: "arrow.clockwise")
-                                .foregroundColor(AppStyle.accentColor)
-                        }
-                        
-                        Button(action: {
-                            showWelcomeView = true
-                        }) {
-                            Text("About")
-                                .font(AppStyle.Typography.subheadline)
-                                .foregroundColor(AppStyle.accentColor)
+                            .foregroundColor(AppStyle.primaryColor)
+                    }
+                    .fullScreenCover(isPresented: $showWelcomeView) {
+                        NavigationStack {
+                            WelcomeView(isPresented: Binding(
+                                get: { showWelcomeView },
+                                set: { showWelcomeView = $0 }
+                            ))
                         }
                     }
-                    .padding(.horizontal, AppStyle.Spacing.medium)
-                }
-                .padding(.top, AppStyle.Spacing.small)
-                .sheet(isPresented: $showWelcomeView) {
-                    WelcomeView(isPresented: $showWelcomeView)
-                }
-                
-                // Total count
-                HStack {
-                    Text("Total Fluids: \(viewModel.fluids.count)")
-                        .font(AppStyle.Typography.subheadline)
-                        .foregroundColor(AppStyle.secondaryTextColor)
-                    Spacer()
+                    
+                    // Reload button
+                    Button(action: {
+                        print("Force reloading fluids data...")
+                        DatabaseManager.shared.updateFluidsCache(force: true)
+                        viewModel.loadData()
+                    }) {
+                        Image(systemName: "arrow.clockwise")
+                            .foregroundColor(AppStyle.accentColor)
+                    }
                 }
                 .padding(.horizontal, AppStyle.Spacing.medium)
-                .padding(.top, AppStyle.Spacing.small)
-                .padding(.bottom, AppStyle.Spacing.medium)
-                
-                // Search bar
-                SearchBar(text: $searchText, placeholder: "Search fluids...")
-                    .padding(.horizontal)
-                
-                // Filter controls
-                HStack {
-                    // Filter by button
-                    Button(action: {
-                        showFilters.toggle()
-                    }) {
-                        HStack {
-                            Text("Filter by")
-                                .font(AppStyle.Typography.body)
-                                .foregroundColor(AppStyle.primaryColor)
-                            Image(systemName: showFilters ? "chevron.up" : "chevron.down")
-                                .foregroundColor(AppStyle.primaryColor)
-                                .font(.caption)
-                        }
-                        .padding(.vertical, 8)
-                    }
-                    
-                    Spacer()
-                    
-                    // Clear filters button
-                    if selectedManufacturer != "All" || selectedType != "All" || selectedUse != "All" {
-                        Button(action: {
-                            selectedManufacturer = "All"
-                            selectedType = "All"
-                            selectedUse = "All"
-                        }) {
-                            Text("Clear Filters")
-                                .font(AppStyle.Typography.subheadline)
-                                .foregroundColor(.red)
-                        }
-                    }
-                }
+            }
+            .padding(.top, AppStyle.Spacing.small)
+            
+            // Search bar
+            SearchBar(text: $searchText, placeholder: "Search fluids...")
                 .padding(.horizontal)
-                .padding(.vertical, 8)
-                
-                // Filter section
-                if showFilters {
-                    VStack(spacing: AppStyle.Spacing.small) {
-                        HStack(spacing: AppStyle.Spacing.small) {
-                            // Type filter
-                            VStack(alignment: .leading) {
-                                Text("Type")
-                                    .font(AppStyle.Typography.caption)
-                                    .foregroundColor(AppStyle.secondaryTextColor)
-                                Picker("Type", selection: $selectedType) {
-                                    ForEach(types, id: \.self) { type in
-                                        Text(type).tag(type)
-                                    }
-                                }
-                                .pickerStyle(MenuPickerStyle())
-                                .padding(.vertical, 4)
-                                .padding(.horizontal, 8)
-                                .background(Color(.systemGray6))
-                                .cornerRadius(8)
-                            }
-                            
-                            // Use filter
-                            VStack(alignment: .leading) {
-                                Text("Use")
-                                    .font(AppStyle.Typography.caption)
-                                    .foregroundColor(AppStyle.secondaryTextColor)
-                                Picker("Use", selection: $selectedUse) {
-                                    ForEach(uses, id: \.self) { use in
-                                        Text(use).tag(use)
-                                    }
-                                }
-                                .pickerStyle(MenuPickerStyle())
-                                .padding(.vertical, 4)
-                                .padding(.horizontal, 8)
-                                .background(Color(.systemGray6))
-                                .cornerRadius(8)
-                            }
-                            
-                            // Manufacturer filter
-                            VStack(alignment: .leading) {
-                                Text("Manufacturer")
-                                    .font(AppStyle.Typography.caption)
-                                    .foregroundColor(AppStyle.secondaryTextColor)
-                                Picker("Manufacturer", selection: $selectedManufacturer) {
-                                    ForEach(manufacturers, id: \.self) { manufacturer in
-                                        Text(manufacturer).tag(manufacturer)
-                                    }
-                                }
-                                .pickerStyle(MenuPickerStyle())
-                                .padding(.vertical, 4)
-                                .padding(.horizontal, 8)
-                                .background(Color(.systemGray6))
-                                .cornerRadius(8)
-                            }
-                        }
-                        .padding(.horizontal, AppStyle.Spacing.medium)
+            
+            // Filter buttons with reset
+            VStack(spacing: AppStyle.Spacing.small) {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: AppStyle.Spacing.small) {
+                        FilterButton(title: "Manufacturer", selection: $selectedManufacturer, options: manufacturers)
+                        FilterButton(title: "Type", selection: $selectedType, options: types)
+                        FilterButton(title: "Use", selection: $selectedUse, options: uses)
                     }
-                    .padding(.vertical, AppStyle.Spacing.small)
-                    .background(Color(.systemBackground))
+                    .padding(.horizontal)
                 }
                 
-                if showError {
-                    Text(errorMessage)
-                        .font(AppStyle.Typography.body)
-                        .foregroundColor(.red)
-                        .padding(AppStyle.Spacing.medium)
-                        .cardStyle()
-                        .padding(.horizontal, AppStyle.Spacing.medium)
-                        .padding(.top, AppStyle.Spacing.small)
-                } else if viewModel.fluids.isEmpty {
-                    Text("No data available")
-                        .font(AppStyle.Typography.body)
-                        .foregroundColor(AppStyle.secondaryTextColor)
-                        .padding(AppStyle.Spacing.medium)
-                        .cardStyle()
-                        .padding(.horizontal, AppStyle.Spacing.medium)
-                        .padding(.top, AppStyle.Spacing.small)
-                } else {
-                    // Data list
-                    List(filteredFluids) { fluid in
-                        NavigationLink {
-                            if let details = viewModel.getFluidDetails(for: fluid) {
-                                FluidDetailView(row: details.row, headers: details.headers)
-                            }
-                        } label: {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(fluid.name)
-                                        .font(.headline)
-                                        .foregroundColor(.primary)
-                                    
-                                    Text(fluid.manufacturer)
-                                        .font(.subheadline)
-                                        .foregroundColor(.secondary)
-                                    
-                                    if let use = fluid.use {
-                                        Text(use)
-                                            .font(.subheadline)
-                                            .foregroundColor(.secondary)
-                                    }
-                                }
-                                .padding(.vertical, 4)
-                                
-                                Spacer()
-                            }
+                // Reset filters button
+                if selectedManufacturer != "All" || selectedType != "All" || selectedUse != "All" || !searchText.isEmpty {
+                    Button(action: resetView) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "xmark.circle.fill")
+                            Text("Reset Filters")
                         }
+                        .font(AppStyle.Typography.subheadline)
+                        .foregroundColor(AppStyle.primaryColor)
                     }
-                    .listStyle(PlainListStyle())
+                    .padding(.horizontal)
                 }
             }
-            .navigationBarHidden(true)
-            .background(AppStyle.backgroundColor)
-            .background(
-                Color.clear
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+            .padding(.vertical, AppStyle.Spacing.small)
+            
+            if viewModel.isLoading {
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if let error = viewModel.error {
+                Text(error)
+                    .font(AppStyle.Typography.body)
+                    .foregroundColor(.red)
+                    .padding(AppStyle.Spacing.medium)
+                    .cardStyle()
+                    .padding(.horizontal, AppStyle.Spacing.medium)
+                    .padding(.top, AppStyle.Spacing.small)
+            } else if filteredFluids.isEmpty {
+                VStack(spacing: AppStyle.Spacing.medium) {
+                    Image(systemName: "magnifyingglass")
+                        .font(.system(size: 50))
+                        .foregroundColor(AppStyle.secondaryTextColor)
+                    Text("No Fluids Found")
+                        .font(AppStyle.Typography.headline)
+                        .foregroundColor(AppStyle.secondaryTextColor)
+                    Text("Try adjusting your search or filters")
+                        .font(AppStyle.Typography.body)
+                        .foregroundColor(AppStyle.secondaryTextColor)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(AppStyle.backgroundColor)
+            } else {
+                List(filteredFluids) { fluid in
+                    NavigationLink {
+                        if let details = viewModel.getFluidDetails(for: fluid) {
+                            FluidDetailView(row: details.row, headers: details.headers)
+                        }
+                    } label: {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(fluid.name)
+                                    .font(.headline)
+                                    .foregroundColor(.primary)
+                                
+                                Text(fluid.manufacturer)
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                                
+                                if let use = fluid.use {
+                                    Text(use)
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                            .padding(.vertical, 4)
+                            
+                            Spacer()
+                        }
                     }
-            )
+                }
+                .listStyle(PlainListStyle())
+            }
         }
+        .navigationBarHidden(true)
+        .background(AppStyle.backgroundColor)
+        .background(
+            Color.clear
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                }
+        )
         .onAppear {
             viewModel.loadData()
         }

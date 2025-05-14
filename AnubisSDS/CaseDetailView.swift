@@ -6,6 +6,7 @@ struct CaseDetailView: View {
     let headers: [String]
     @State private var relatedFluids: [(fluid: [String], reasons: [String])] = []
     @State private var selectedIndex: Double?
+    @Environment(\.dismiss) private var dismiss
     
     // Cache the fluids data
     private static var cachedFluidsData: [[String]] = []
@@ -162,12 +163,16 @@ struct CaseDetailView: View {
                                     Spacer()
                                     
                                     // Direct calculation button
-                                    NavigationLink(destination: CH2OView(
-                                        initialStrengthPercent: strengthPercentValue,
-                                        initialFluidIndex: fluidIndex,
-                                        initialFluidName: fluidName,
-                                        initialConditionName: getValue(for: "CASE TYPE")
-                                    )) {
+                                    NavigationLink {
+                                        CH2OView(
+                                            initialStrengthPercent: strengthPercentValue,
+                                            initialFluidIndex: fluidIndex,
+                                            initialFluidName: fluidName,
+                                            initialConditionName: getValue(for: "CASE TYPE")
+                                        )
+                                        .navigationBarTitleDisplayMode(.inline)
+                                        .navigationTitle("CH₂O Calculator")
+                                    } label: {
                                         HStack(spacing: 6) {
                                             Image(systemName: "drop.fill")
                                                 .font(.system(size: 16))
@@ -221,6 +226,22 @@ struct CaseDetailView: View {
             .padding(AppStyle.Spacing.medium)
         }
         .navigationBarTitleDisplayMode(.inline)
+        .navigationTitle("Case Details")
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(action: {
+                    NotificationCenter.default.post(name: NSNotification.Name("ResetNavigation"), object: nil)
+                    dismiss()
+                }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "chevron.left")
+                        Text("Back")
+                    }
+                    .foregroundColor(AppStyle.primaryColor)
+                }
+            }
+        }
         .onAppear {
             loadFluidsData()
             findMatchingFluids()

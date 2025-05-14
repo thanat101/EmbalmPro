@@ -258,44 +258,32 @@ private struct FullSDSSheetView: View {
     @Binding var isPresented: Bool
     
     var body: some View {
-        NavigationView {
-            ScrollView {
-                VStack(alignment: .leading, spacing: AppStyle.Spacing.large) {
-                    // Header
-                    VStack(alignment: .leading, spacing: AppStyle.Spacing.medium) {
-                        Text("SAFETY DATA SHEET")
-                            .font(.system(size: 28, weight: .bold, design: .rounded))
-                            .foregroundColor(AppStyle.textColor)
-                            .frame(maxWidth: .infinity, alignment: .center)
-                            .padding(.bottom, 4)
-                        
-                        // Product Info Card
-                        ProductInfoCard(fluid: viewModel.fluid)
-                    }
-                    .padding(.horizontal)
+        ScrollView {
+            VStack(alignment: .leading, spacing: AppStyle.Spacing.large) {
+                // Header
+                VStack(alignment: .leading, spacing: AppStyle.Spacing.medium) {
+                    Text("SAFETY DATA SHEET")
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .foregroundColor(AppStyle.textColor)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.bottom, 4)
                     
-                    // All Sections
-                    ForEach(viewModel.fullSDSSections, id: \.title) { section in
-                        SDSSectionCard(title: section.title, content: section.content, icon: section.icon)
-                    }
-                    
-                    // Footer
-                    FooterCard(fluid: viewModel.fluid)
+                    // Product Info Card
+                    ProductInfoCard(fluid: viewModel.fluid)
                 }
-                .padding(.vertical)
-            }
-            .background(Color(.systemGroupedBackground))
-            .navigationTitle("Full SDS")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        isPresented = false
-                    }
-                    .font(.system(.body, design: .rounded))
+                .padding(.horizontal)
+                
+                // All Sections
+                ForEach(viewModel.fullSDSSections, id: \.title) { section in
+                    SDSSectionCard(title: section.title, content: section.content, icon: section.icon)
                 }
+                
+                // Footer
+                FooterCard(fluid: viewModel.fluid)
             }
+            .padding(.vertical)
         }
+        .background(Color(.systemGroupedBackground))
     }
 }
 
@@ -573,7 +561,9 @@ private struct SDSSectionsListView: View {
 struct SDSDetailView: View {
     @StateObject private var viewModel: SDSDetailViewModel
     @State private var showFullSDS = false
+    @State private var selectedSection: (title: String, content: String?)? = nil
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     
     init(fluid: Fluid) {
         _viewModel = StateObject(wrappedValue: SDSDetailViewModel(fluid: fluid))
@@ -608,11 +598,71 @@ struct SDSDetailView: View {
                 )
                 
                 // Required SDS Sections
-                SDSSectionsListView(
-                    sections: viewModel.getSectionsWithContent(),
-                    onSave: { sectionTitle, newContent in
-                        // Get the section ID from the title (e.g., "1. Identification" -> "1")
-                        if let sectionId = sectionTitle.split(separator: ".").first?.trimmingCharacters(in: .whitespaces),
+                LazyVStack(spacing: 0) {
+                    ForEach(viewModel.getSectionsWithContent(), id: \.section.id) { item in
+                        Button {
+                            selectedSection = (item.section.title, item.content)
+                        } label: {
+                            HStack {
+                                Image(systemName: item.section.icon)
+                                    .foregroundColor(AppStyle.primaryColor)
+                                Text(item.section.title)
+                                    .font(.headline)
+                                    .foregroundColor(.primary)
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding(.horizontal)
+                            .padding(.vertical, 12)
+                            .background(Color(.systemBackground))
+                            .cornerRadius(8)
+                            .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                        .padding(.horizontal)
+                        .padding(.vertical, 4)
+                    }
+                }
+                
+                // Footer Section
+                SDSFooterView(fluid: viewModel.fluid)
+            }
+            .padding(.vertical, 4)
+        }
+        .navigationBarTitle("SDS Details", displayMode: .inline)
+        .alert("Error", isPresented: $viewModel.showError) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(viewModel.errorMessage)
+        }
+        .fullScreenCover(isPresented: $showFullSDS) {
+            NavigationStack {
+                FullSDSSheetView(viewModel: viewModel, isPresented: $showFullSDS)
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarLeading) {
+                            Button(action: {
+                                showFullSDS = false
+                            }) {
+                                Image(systemName: "xmark")
+                                    .foregroundColor(AppStyle.primaryColor)
+                            }
+                        }
+                    }
+            }
+        }
+        .fullScreenCover(item: Binding(
+            get: { selectedSection.map { SectionItem(title: $0.title, content: $0.content) } },
+            set: { selectedSection = $0.map { ($0.title, $0.content) } }
+        )) { section in
+            NavigationStack {
+                SDSSectionDetailView(
+                    title: section.title,
+                    content: section.content,
+                    onSave: { newContent in
+                        // Get the section ID from the title
+                        if let sectionId = section.title.split(separator: ".").first?.trimmingCharacters(in: .whitespaces),
                            let section = SDSSection.allSections.first(where: { $0.id == sectionId }) {
                             // Get the Fluid property name for this section
                             let propertyName = viewModel.getPropertyNameForSection(section)
@@ -626,7 +676,6 @@ struct SDSDetailView: View {
                                     // Post notification to refresh the fluids list
                                     NotificationCenter.default.post(name: NSNotification.Name("FluidsChanged"), object: nil)
                                     // Force cache update
-                                    print("🔄 Forcing cache update after SDS save...")
                                     DatabaseManager.shared.updateFluidsCache(force: true)
                                 } else {
                                     viewModel.errorMessage = "Failed to save changes. Please try again."
@@ -634,28 +683,34 @@ struct SDSDetailView: View {
                                 }
                             }
                         }
+                        selectedSection = nil
                     }
                 )
-                
-                // Footer Section
-                SDSFooterView(fluid: viewModel.fluid)
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button(action: {
+                            selectedSection = nil
+                        }) {
+                            Image(systemName: "xmark")
+                                .foregroundColor(AppStyle.primaryColor)
+                        }
+                    }
+                }
             }
-            .padding(.vertical, 4)
-        }
-        .navigationBarTitle("SDS Details", displayMode: .inline)
-        .alert("Error", isPresented: $viewModel.showError) {
-            Button("OK", role: .cancel) { }
-        } message: {
-            Text(viewModel.errorMessage)
-        }
-        .sheet(isPresented: $showFullSDS) {
-            FullSDSSheetView(viewModel: viewModel, isPresented: $showFullSDS)
         }
         .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("FluidsChanged"))) { _ in
             print("📢 Received FluidsChanged notification in SDS detail view")
             refreshData()
         }
     }
+}
+
+// Add a struct to conform to Identifiable for the fullScreenCover
+private struct SectionItem: Identifiable {
+    let id = UUID()
+    let title: String
+    let content: String?
 }
 
 // MARK: - SDS Section Components
@@ -751,11 +806,28 @@ private struct SDSSectionView: View {
     let onSave: (String) -> Void
     
     var body: some View {
-        SDSSectionViewer(
-            section: section,
-            content: content,
-            onSave: onSave
-        )
+        NavigationLink {
+            SDSSectionDetailView(
+                title: section.title,
+                content: content,
+                onSave: onSave
+            )
+            .navigationBarTitleDisplayMode(.inline)
+        } label: {
+            HStack {
+                Image(systemName: section.icon)
+                    .foregroundColor(AppStyle.primaryColor)
+                Text(section.title)
+                    .font(.headline)
+                    .foregroundColor(.primary)
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .foregroundColor(.secondary)
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 12)
+        }
+        .buttonStyle(PlainButtonStyle())
         .background(Color(.systemBackground))
         .cornerRadius(8)
         .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
