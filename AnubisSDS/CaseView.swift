@@ -199,6 +199,7 @@ public struct CaseView: View {
                     }
                 }
                 .listStyle(PlainListStyle())
+                .scrollDismissesKeyboard(.immediately)
                 .background(AppStyle.backgroundColor)
             }
             
