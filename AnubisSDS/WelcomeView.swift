@@ -273,7 +273,7 @@ struct WelcomeView: View {
                             .font(.title2)
                             .fontWeight(.bold)
                         
-                        Text("Safety Data Sheet content is extracted from publicly available manufacturer documents. All data is presented solely for compliance and informational use under OSHA regulations.")
+                        Text("Safety Data Sheet (SDS) content in this app is extracted from publicly available manufacturer documents and presented solely for informational and compliance purposes under OSHA regulations. While the SDS information consists primarily of factual, regulatory-mandated content, any proprietary branding, formatting, or commentary originally present has been removed. All trademarks and copyrights remain the property of their respective owners.")
                             .font(.subheadline)
                             .italic()
                         
