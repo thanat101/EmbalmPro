@@ -187,7 +187,6 @@ struct FavoritesView: View {
                 .listStyle(PlainListStyle())
             }
         }
-        .navigationBarHidden(true)
         .background(AppStyle.backgroundColor)
         .background(
             Color.clear

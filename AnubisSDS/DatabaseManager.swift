@@ -120,38 +120,48 @@ class DatabaseManager {
         let fileManager = FileManager.default
         
         do {
-            // Remove current database
+            // Get the bundle database path
+            guard let bundlePath = Bundle.main.path(forResource: "data", ofType: "db") else {
+                print("❌ Could not find database in bundle")
+                return false
+            }
+            
+            // Remove current database if it exists
             if fileManager.fileExists(atPath: databaseURL.path) {
                 try fileManager.removeItem(at: databaseURL)
                 print("✅ Removed current database")
             }
             
-            // Copy backup to restore original state
+            // Always copy fresh from bundle
+            try fileManager.copyItem(at: URL(fileURLWithPath: bundlePath), to: databaseURL)
+            print("✅ Copied fresh database from bundle")
+            
+            // Create new backup of the fresh copy
             if fileManager.fileExists(atPath: backupURL.path) {
-                try fileManager.copyItem(at: backupURL, to: databaseURL)
-                print("✅ Restored database from backup")
-            } else {
-                // If no backup exists, copy from bundle
-                guard let bundlePath = Bundle.main.path(forResource: "data", ofType: "db") else {
-                    print("❌ Could not find database in bundle")
-                    return false
-                }
-                try fileManager.copyItem(atPath: bundlePath, toPath: databaseURL.path)
-                print("✅ Restored database from bundle")
+                try fileManager.removeItem(at: backupURL)
             }
+            try fileManager.copyItem(at: databaseURL, to: backupURL)
+            print("✅ Created new backup of fresh database")
             
             // Reset database version
             UserDefaults.standard.set(databaseVersion, forKey: "databaseVersion")
             
+            // Clear any existing cache
+            if let cacheURL = cacheURL, fileManager.fileExists(atPath: cacheURL.path) {
+                try fileManager.removeItem(at: cacheURL)
+                print("✅ Cleared existing cache")
+            }
+            
             // Reopen database
             setupDatabase()
             
-            print("✅ Database reset complete")
-            return true
+            print("✅ Database reset complete - fresh copy from bundle")
         } catch {
             print("❌ Failed to reset database: \(error.localizedDescription)")
             return false
         }
+        
+        return true
     }
     
     deinit {

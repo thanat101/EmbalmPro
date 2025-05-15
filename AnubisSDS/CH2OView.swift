@@ -57,21 +57,6 @@ struct CH2OView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-                // Header section
-                VStack(spacing: AppStyle.Spacing.small) {
-                    HStack {
-                        Spacer()
-                        
-                        Text("CH₂O Calculator")
-                            .font(AppStyle.Typography.subheadline)
-                            .foregroundColor(AppStyle.textColor)
-                        
-                        Spacer()
-                    }
-                    .padding(.horizontal, AppStyle.Spacing.medium)
-                    .padding(.top, AppStyle.Spacing.small)
-                }
-                
                 // Body Info Section
                 BodyInfoSection(viewModel: viewModel)
                 

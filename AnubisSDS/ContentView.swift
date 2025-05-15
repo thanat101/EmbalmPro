@@ -9,6 +9,14 @@ struct ContentView: View {
         TabView(selection: $selectedTab) {
             NavigationStack {
                 FluidsView()
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .principal) {
+                            Text("Fluids Database")
+                                .font(AppStyle.Typography.headline)
+                                .foregroundColor(AppStyle.textColor)
+                        }
+                    }
             }
             .tabItem {
                 Label("Fluids", systemImage: "flask.fill")
@@ -17,6 +25,14 @@ struct ContentView: View {
             
             NavigationStack {
                 CaseView()
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .principal) {
+                            Text("Case Analysis")
+                                .font(AppStyle.Typography.headline)
+                                .foregroundColor(AppStyle.textColor)
+                        }
+                    }
             }
             .tabItem {
                 Label("Case Analysis", systemImage: "figure")
@@ -25,6 +41,14 @@ struct ContentView: View {
             
             NavigationStack {
                 CH2OView()
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .principal) {
+                            Text("CH₂O Calculator")
+                                .font(AppStyle.Typography.headline)
+                                .foregroundColor(AppStyle.textColor)
+                        }
+                    }
             }
             .tabItem {
                 Label("CH₂O", systemImage: "function")
@@ -33,6 +57,14 @@ struct ContentView: View {
             
             NavigationStack {
                 SDSView()
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .principal) {
+                            Text("SDS Database")
+                                .font(AppStyle.Typography.headline)
+                                .foregroundColor(AppStyle.textColor)
+                        }
+                    }
             }
             .tabItem {
                 Label("SDS", systemImage: "doc.text")
@@ -41,6 +73,14 @@ struct ContentView: View {
             
             NavigationStack {
                 FavoritesView()
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .principal) {
+                            Text("Favorites")
+                                .font(AppStyle.Typography.headline)
+                                .foregroundColor(AppStyle.textColor)
+                        }
+                    }
             }
             .tabItem {
                 Label("Favorites", systemImage: "star.fill")

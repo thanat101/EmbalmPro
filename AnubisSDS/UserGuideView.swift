@@ -79,11 +79,20 @@ struct UserGuideView: View {
                         .font(AppStyle.Typography.headline)
                         .foregroundColor(AppStyle.primaryColor)
                         
-                        NavigationLink("11. Database Updates") {
-                            DatabaseUpdateSection()
+                        NavigationLink("11. Database Reset") {
+                            DatabaseResetSection()
                         }
                         .font(AppStyle.Typography.headline)
                         .foregroundColor(AppStyle.primaryColor)
+                        
+                        Divider()
+                            .padding(.vertical, 8)
+                        
+                        NavigationLink("Settings") {
+                            SettingsView()
+                        }
+                        .font(AppStyle.Typography.headline)
+                        .foregroundColor(.red)
                     }
                     .padding()
                     .cardStyle()
@@ -731,156 +740,99 @@ struct EditFeatureSection: View {
     }
 }
 
-// MARK: - Database Update Section
-struct DatabaseUpdateSection: View {
-    @State private var isUpdating = false
-    @State private var showAlert = false
-    @State private var alertMessage = ""
-    @State private var alertTitle = ""
-    
+// MARK: - Database Reset Section
+struct DatabaseResetSection: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: AppStyle.Spacing.large) {
                 Group {
-                    Text("Database Updates")
+                    Text("Database Reset")
                         .font(AppStyle.Typography.title)
                         .foregroundColor(AppStyle.textColor)
                     
-                    Text("The app's database can be updated to include the latest fluid information. This should only be done when you are notified of an available update.")
+                    Text("The app provides two types of reset functionality:")
                         .font(AppStyle.Typography.body)
                         .foregroundColor(AppStyle.textColor)
                     
-                    Text("Important Notes:")
+                    Text("1. Cache Reset (Circular Button)")
                         .font(AppStyle.Typography.headline)
                         .foregroundColor(AppStyle.textColor)
                         .padding(.top)
                     
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("• Ensure you have a stable internet connection")
-                        Text("• The update process may take a few moments")
-                        Text("• Do not close the app during the update")
-                        Text("• Your current data will be backed up automatically")
+                        Text("• Located in the Fluids tab")
+                        Text("• Appears as a circular arrow button")
+                        Text("• Refreshes the app's cache")
+                        Text("• Updates the view with latest data")
+                        Text("• Required after making edits to see changes")
+                        Text("• Does not affect the actual database")
                     }
                     .font(AppStyle.Typography.body)
                     .foregroundColor(AppStyle.textColor)
                     
-                    Button(action: {
-                        updateDatabase()
-                    }) {
-                        HStack {
-                            if isUpdating {
-                                ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                    .padding(.trailing, 8)
-                            }
-                            Text(isUpdating ? "Updating..." : "Check for Database Update")
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(isUpdating ? Color.gray : AppStyle.primaryColor)
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
+                    Text("2. Database Reset (Settings)")
+                        .font(AppStyle.Typography.headline)
+                        .foregroundColor(AppStyle.textColor)
+                        .padding(.top)
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("• Access through Settings in User Guide")
+                        Text("• Completely resets ALL database tables to original state")
+                        Text("• Affects both Fluids and Conditions tables")
+                        Text("• Removes all edits and changes to any table")
+                        Text("• Gets fresh copy of entire database from app bundle")
+                        Text("• Requires multiple confirmations")
+                        Text("• Cannot be undone")
                     }
-                    .disabled(isUpdating)
-                    .padding(.top)
+                    .font(AppStyle.Typography.body)
+                    .foregroundColor(AppStyle.textColor)
+                    
+                    Text("Important Reset Process:")
+                        .font(AppStyle.Typography.headline)
+                        .foregroundColor(AppStyle.textColor)
+                        .padding(.top)
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("1. To reset the database:")
+                        Text("   • Go to Settings in User Guide")
+                        Text("   • Tap 'Reset Database'")
+                        Text("   • Confirm the warnings")
+                        Text("   • Wait for reset to complete")
+                        Text("   • All tables (Fluids, Conditions, etc.) will be reset")
+                        Text("   • Return to Fluids tab")
+                        Text("   • Tap circular reset button to refresh view")
+                        
+                        Text("\n2. After making edits:")
+                        Text("   • Changes are saved automatically")
+                        Text("   • Return to Fluids tab")
+                        Text("   • Tap circular reset button to see changes")
+                        
+                        Text("\n3. To see fresh data:")
+                        Text("   • Always use circular reset button")
+                        Text("   • This ensures view matches database")
+                    }
+                    .font(AppStyle.Typography.body)
+                    .foregroundColor(AppStyle.textColor)
+                    
+                    Text("Warning:")
+                        .font(AppStyle.Typography.headline)
+                        .foregroundColor(.red)
+                        .padding(.top)
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("• Database reset is permanent")
+                        Text("• All edits will be lost")
+                        Text("• Cannot be undone")
+                        Text("• Always use circular reset for normal updates")
+                        Text("• Only use database reset when necessary")
+                    }
+                    .font(AppStyle.Typography.body)
+                    .foregroundColor(AppStyle.textColor)
                 }
             }
             .padding()
         }
-        .navigationTitle("Database Updates")
-        .alert(alertTitle, isPresented: $showAlert) {
-            Button("OK", role: .cancel) { }
-        } message: {
-            Text(alertMessage)
-        }
-    }
-    
-    private func updateDatabase() {
-        isUpdating = true
-        
-        // Get the app's Documents directory
-        guard let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
-            alertTitle = "Error"
-            alertMessage = "Could not access app directory"
-            showAlert = true
-            isUpdating = false
-            return
-        }
-        
-        let databaseURL = documentsPath.appendingPathComponent("data.db")
-        let backupURL = documentsPath.appendingPathComponent("data.db.backup")
-        
-        // Create a backup of the current database
-        do {
-            if FileManager.default.fileExists(atPath: databaseURL.path) {
-                try FileManager.default.copyItem(at: databaseURL, to: backupURL)
-            }
-        } catch {
-            alertTitle = "Backup Error"
-            alertMessage = "Failed to create backup: \(error.localizedDescription)"
-            showAlert = true
-            isUpdating = false
-            return
-        }
-        
-        // Download the new database
-        let downloadURL = URL(string: "https://embalmpro.tech/data.db")!
-        URLSession.shared.downloadTask(with: downloadURL) { tempURL, response, error in
-            DispatchQueue.main.async {
-                if let error = error {
-                    alertTitle = "Download Error"
-                    alertMessage = "Failed to download update: \(error.localizedDescription)"
-                    showAlert = true
-                    isUpdating = false
-                    return
-                }
-                
-                guard let tempURL = tempURL else {
-                    alertTitle = "Download Error"
-                    alertMessage = "No data received"
-                    showAlert = true
-                    isUpdating = false
-                    return
-                }
-                
-                // Verify the downloaded file
-                do {
-                    let fileSize = try FileManager.default.attributesOfItem(atPath: tempURL.path)[.size] as? Int64 ?? 0
-                    if fileSize < 1000 { // Basic size check (adjust minimum size as needed)
-                        throw NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Downloaded file appears to be invalid"])
-                    }
-                    
-                    // Replace the old database with the new one
-                    try FileManager.default.removeItem(at: databaseURL)
-                    try FileManager.default.moveItem(at: tempURL, to: databaseURL)
-                    
-                    // Update was successful
-                    alertTitle = "Success"
-                    alertMessage = "Database updated successfully. The app will restart to apply changes."
-                    showAlert = true
-                    
-                    // Post notification to restart the app
-                    NotificationCenter.default.post(name: NSNotification.Name("DatabaseUpdated"), object: nil)
-                    
-                } catch {
-                    // If update failed, restore from backup
-                    do {
-                        if FileManager.default.fileExists(atPath: backupURL.path) {
-                            try FileManager.default.removeItem(at: databaseURL)
-                            try FileManager.default.copyItem(at: backupURL, to: databaseURL)
-                        }
-                    } catch {
-                        print("Failed to restore from backup: \(error)")
-                    }
-                    
-                    alertTitle = "Update Error"
-                    alertMessage = "Failed to update database: \(error.localizedDescription)"
-                    showAlert = true
-                }
-                
-                isUpdating = false
-            }
-        }.resume()
+        .navigationTitle("Database Reset")
     }
 }
 

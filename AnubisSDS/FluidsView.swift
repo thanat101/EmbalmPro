@@ -133,13 +133,9 @@ struct FluidsView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Header section
+            // Header section - keep only About and reload buttons
             VStack(spacing: AppStyle.Spacing.small) {
                 HStack {
-                    Text("Fluids Database")
-                        .font(AppStyle.Typography.subheadline)
-                        .foregroundColor(AppStyle.textColor)
-                    
                     Spacer()
                     
                     // About button
@@ -171,6 +167,16 @@ struct FluidsView: View {
                 }
                 .padding(.horizontal, AppStyle.Spacing.medium)
             }
+            .padding(.top, AppStyle.Spacing.small)
+            
+            // Total count
+            HStack {
+                Text("Total Chemicals: \(viewModel.fluids.count)")
+                    .font(AppStyle.Typography.subheadline)
+                    .foregroundColor(AppStyle.secondaryTextColor)
+                Spacer()
+            }
+            .padding(.horizontal, AppStyle.Spacing.medium)
             .padding(.top, AppStyle.Spacing.small)
             
             // Search bar
@@ -260,9 +266,9 @@ struct FluidsView: View {
                     }
                 }
                 .listStyle(PlainListStyle())
+                .scrollDismissesKeyboard(.immediately)
             }
         }
-        .navigationBarHidden(true)
         .background(AppStyle.backgroundColor)
         .background(
             Color.clear
@@ -282,45 +288,6 @@ struct FluidsView: View {
             viewModel.loadData()
         }
         .id(shouldResetNavigation)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                HStack {
-                    Text("Fluids Database")
-                        .font(AppStyle.Typography.subheadline)
-                        .foregroundColor(AppStyle.textColor)
-                    
-                    Spacer()
-                    
-                    // About button
-                    Button(action: {
-                        showWelcomeView = true
-                    }) {
-                        Text("About")
-                            .font(AppStyle.Typography.subheadline)
-                            .foregroundColor(AppStyle.primaryColor)
-                    }
-                    .fullScreenCover(isPresented: $showWelcomeView) {
-                        NavigationStack {
-                            WelcomeView(isPresented: Binding(
-                                get: { showWelcomeView },
-                                set: { showWelcomeView = $0 }
-                            ))
-                        }
-                    }
-                    
-                    // Reload button
-                    Button(action: {
-                        print("Force reloading fluids data...")
-                        DatabaseManager.shared.updateFluidsCache(force: true)
-                        viewModel.loadData()
-                    }) {
-                        Image(systemName: "arrow.clockwise")
-                            .foregroundColor(AppStyle.accentColor)
-                    }
-                }
-            }
-        }
     }
 }
 

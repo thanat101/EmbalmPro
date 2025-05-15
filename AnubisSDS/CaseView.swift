@@ -20,26 +20,24 @@ private struct CaseRowView: View {
                     .font(.headline)
                     .foregroundColor(.primary)
                 
-                HStack(spacing: 16) {
-                    // Solution Strength
-                    HStack(spacing: 4) {
-                        Text("Solution:")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                        Text(getValue(for: "SOLUTION STRENGTH"))
-                            .font(.subheadline)
-                            .foregroundColor(.primary)
-                    }
-                    
-                    // CH2O Index
-                    HStack(spacing: 4) {
-                        Text("CH2O:")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                        Text(getValue(for: "CH2O INDEX"))
-                            .font(.subheadline)
-                            .foregroundColor(.primary)
-                    }
+                // Solution Strength
+                HStack(spacing: 4) {
+                    Text("Needed Solution Strength:")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    Text(getValue(for: "SOLUTION STRENGTH"))
+                        .font(.subheadline)
+                        .foregroundColor(.primary)
+                }
+                
+                // CH2O Index
+                HStack(spacing: 4) {
+                    Text("Embalming Fluid Index:")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    Text(getValue(for: "CH2O INDEX"))
+                        .font(.subheadline)
+                        .foregroundColor(.primary)
                 }
             }
             .padding(.vertical, AppStyle.Spacing.small)
@@ -158,11 +156,9 @@ public struct CaseView: View {
     
     public var body: some View {
         VStack(spacing: 0) {
-            // Header section
+            // Header section - remove title, keep spacing for consistency
             VStack(spacing: AppStyle.Spacing.small) {
-                Text("Case Analysis")
-                    .font(AppStyle.Typography.subheadline)
-                    .foregroundColor(AppStyle.textColor)
+                // Empty VStack for consistent spacing
             }
             .padding(.top, AppStyle.Spacing.small)
             
@@ -208,7 +204,6 @@ public struct CaseView: View {
             
             Spacer()
         }
-        .navigationBarHidden(true)
         .background(AppStyle.backgroundColor)
         .background(
             Color.clear

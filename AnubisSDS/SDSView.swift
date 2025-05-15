@@ -33,13 +33,9 @@ struct SDSView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Header section
+            // Header section - keep only reload button
             VStack(spacing: AppStyle.Spacing.small) {
                 HStack {
-                    Text("SDS Database")
-                        .font(AppStyle.Typography.subheadline)
-                        .foregroundColor(AppStyle.textColor)
-                    
                     Spacer()
                     
                     // Reload button
@@ -116,9 +112,9 @@ struct SDSView: View {
                 }
                 .listStyle(PlainListStyle())
                 .background(AppStyle.backgroundColor)
+                .scrollDismissesKeyboard(.immediately)
             }
         }
-        .navigationBarHidden(true)
         .background(AppStyle.backgroundColor)
         .background(
             Color.clear
@@ -134,28 +130,6 @@ struct SDSView: View {
             shouldResetNavigation = true
         }
         .id(shouldResetNavigation)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                HStack {
-                    Text("SDS Database")
-                        .font(AppStyle.Typography.subheadline)
-                        .foregroundColor(AppStyle.textColor)
-                    
-                    Spacer()
-                    
-                    // Reload button
-                    Button(action: {
-                        print("Force reloading SDS data...")
-                        DatabaseManager.shared.updateFluidsCache(force: true)
-                        loadFluidsData()
-                    }) {
-                        Image(systemName: "arrow.clockwise")
-                            .foregroundColor(AppStyle.accentColor)
-                    }
-                }
-            }
-        }
     }
     
     private func loadFluidsData() {
