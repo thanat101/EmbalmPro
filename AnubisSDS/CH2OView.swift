@@ -55,149 +55,149 @@ struct CH2OView: View {
     }
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: 20) {
-                // Body Info Section
-                BodyInfoSection(viewModel: viewModel)
-                
-                // Calculator Input Section
-                VStack(alignment: .leading, spacing: AppStyle.Spacing.medium) {
-                    Text("Calculate Required Fluid")
-                        .font(AppStyle.Typography.headline)
-                        .foregroundColor(AppStyle.textColor)
+            ScrollView {
+                VStack(spacing: 20) {
+                    // Body Info Section
+                    BodyInfoSection(viewModel: viewModel)
                     
-                    if !viewModel.conditionName.isEmpty {
-                        Text("Case Type: \(viewModel.conditionName)")
-                            .font(AppStyle.Typography.subheadline)
-                            .foregroundColor(AppStyle.secondaryTextColor)
-                            .padding(.bottom, 4)
-                    }
-                    
-                    if !viewModel.fluidName.isEmpty {
-                        Text("Selected Fluid: \(viewModel.fluidName)")
-                            .font(AppStyle.Typography.subheadline)
-                            .foregroundColor(AppStyle.secondaryTextColor)
-                            .padding(.bottom, 8)
-                    }
-                    
-                    // Place all three inputs in one horizontal row
-                    HStack(spacing: AppStyle.Spacing.medium) {
-                        // Strength input
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Strength (%)")
-                                .font(AppStyle.Typography.caption)
-                                .foregroundColor(AppStyle.secondaryTextColor)
-                            
-                            TextField("2%", text: $viewModel.desiredStrength)
-                                .keyboardType(.decimalPad)
-                                .padding(8)
-                                .frame(height: 40)
-                                .background(Color(.systemGray6))
-                                .cornerRadius(AppStyle.CornerRadius.small)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: AppStyle.CornerRadius.small)
-                                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                                )
-                                .onChange(of: viewModel.desiredStrength) { newValue in
-                                    viewModel.calculationPerformed = false
-                                }
-                                .focused($focusedField, equals: .strength)
-                        }
-                        .frame(maxWidth: .infinity)
+                    // Calculator Input Section
+                    VStack(alignment: .leading, spacing: AppStyle.Spacing.medium) {
+                        Text("Calculate Required Fluid")
+                            .font(AppStyle.Typography.headline)
+                            .foregroundColor(AppStyle.textColor)
                         
-                        // Volume input
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Volume (oz)")
-                                .font(AppStyle.Typography.caption)
+                        if !viewModel.conditionName.isEmpty {
+                            Text("Case Type: \(viewModel.conditionName)")
+                                .font(AppStyle.Typography.subheadline)
                                 .foregroundColor(AppStyle.secondaryTextColor)
-                            
-                            TextField("128", text: $viewModel.totalVolume)
-                                .keyboardType(.decimalPad)
-                                .padding(8)
-                                .frame(height: 40)
-                                .background(Color(.systemGray6))
-                                .cornerRadius(AppStyle.CornerRadius.small)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: AppStyle.CornerRadius.small)
-                                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                                )
-                                .onChange(of: viewModel.totalVolume) { newValue in
-                                    viewModel.calculationPerformed = false
-                                    // If the field is cleared, restore the default value
-                                    if newValue.isEmpty {
-                                        viewModel.totalVolume = "128"
+                                .padding(.bottom, 4)
+                        }
+                        
+                        if !viewModel.fluidName.isEmpty {
+                            Text("Selected Fluid: \(viewModel.fluidName)")
+                                .font(AppStyle.Typography.subheadline)
+                                .foregroundColor(AppStyle.secondaryTextColor)
+                                .padding(.bottom, 8)
+                        }
+                        
+                        // Place all three inputs in one horizontal row
+                        HStack(spacing: AppStyle.Spacing.medium) {
+                            // Strength input
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Strength (%)")
+                                    .font(AppStyle.Typography.caption)
+                                    .foregroundColor(AppStyle.secondaryTextColor)
+                                
+                                TextField("2%", text: $viewModel.desiredStrength)
+                                    .keyboardType(.decimalPad)
+                                    .padding(8)
+                                    .frame(height: 40)
+                                    .background(Color(.systemGray6))
+                                    .cornerRadius(AppStyle.CornerRadius.small)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: AppStyle.CornerRadius.small)
+                                            .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                                    )
+                                    .onChange(of: viewModel.desiredStrength) { newValue in
+                                        viewModel.calculationPerformed = false
                                     }
-                                }
-                                .focused($focusedField, equals: .volume)
-                        }
-                        .frame(maxWidth: .infinity)
-                        
-                        // Fluid index input
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Index")
-                                .font(AppStyle.Typography.caption)
-                                .foregroundColor(AppStyle.secondaryTextColor)
-                            
-                            TextField("25", text: $viewModel.fluidIndex)
-                                .keyboardType(.decimalPad)
-                                .padding(8)
-                                .frame(height: 40)
-                                .background(Color(.systemGray6))
-                                .cornerRadius(AppStyle.CornerRadius.small)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: AppStyle.CornerRadius.small)
-                                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                                )
-                                .onChange(of: viewModel.fluidIndex) { newValue in
-                                    viewModel.calculationPerformed = false
-                                }
-                                .focused($focusedField, equals: .index)
-                        }
-                        .frame(maxWidth: .infinity)
-                    }
-                    
-                    if viewModel.showError {
-                        Text(viewModel.errorMessage)
-                            .font(AppStyle.Typography.caption)
-                            .foregroundColor(.red)
-                            .padding(.top, 4)
-                    }
-                    
-                    Button(action: {
-                        playFeedback()
-                        DispatchQueue.main.async {
-                            viewModel.calculateAll()
-                            focusedField = nil
-                            // Dismiss keyboard using UIKit
-                            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-                        }
-                    }) {
-                        Text("Calculate")
-                            .font(AppStyle.Typography.button)
-                            .foregroundColor(.white)
+                                    .focused($focusedField, equals: .strength)
+                            }
                             .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(viewModel.calculationPerformed ? Color.gray : AppStyle.primaryColor)
-                            .cornerRadius(AppStyle.CornerRadius.medium)
-                            .scaleEffect(viewModel.calculationPerformed ? 1.0 : 1.0)
-                            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: viewModel.calculationPerformed)
+                            
+                            // Volume input
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Volume (oz)")
+                                    .font(AppStyle.Typography.caption)
+                                    .foregroundColor(AppStyle.secondaryTextColor)
+                                
+                                TextField("128", text: $viewModel.totalVolume)
+                                    .keyboardType(.decimalPad)
+                                    .padding(8)
+                                    .frame(height: 40)
+                                    .background(Color(.systemGray6))
+                                    .cornerRadius(AppStyle.CornerRadius.small)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: AppStyle.CornerRadius.small)
+                                            .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                                    )
+                                    .onChange(of: viewModel.totalVolume) { newValue in
+                                        viewModel.calculationPerformed = false
+                                        // If the field is cleared, restore the default value
+                                        if newValue.isEmpty {
+                                            viewModel.totalVolume = "128"
+                                        }
+                                    }
+                                    .focused($focusedField, equals: .volume)
+                            }
+                            .frame(maxWidth: .infinity)
+                            
+                            // Fluid index input
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Index")
+                                    .font(AppStyle.Typography.caption)
+                                    .foregroundColor(AppStyle.secondaryTextColor)
+                                
+                                TextField("25", text: $viewModel.fluidIndex)
+                                    .keyboardType(.decimalPad)
+                                    .padding(8)
+                                    .frame(height: 40)
+                                    .background(Color(.systemGray6))
+                                    .cornerRadius(AppStyle.CornerRadius.small)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: AppStyle.CornerRadius.small)
+                                            .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                                    )
+                                    .onChange(of: viewModel.fluidIndex) { newValue in
+                                        viewModel.calculationPerformed = false
+                                    }
+                                    .focused($focusedField, equals: .index)
+                            }
+                            .frame(maxWidth: .infinity)
+                        }
+                        
+                        if viewModel.showError {
+                            Text(viewModel.errorMessage)
+                                .font(AppStyle.Typography.caption)
+                                .foregroundColor(.red)
+                                .padding(.top, 4)
+                        }
+                        
+                        Button(action: {
+                            playFeedback()
+                            DispatchQueue.main.async {
+                                viewModel.calculateAll()
+                                focusedField = nil
+                                // Dismiss keyboard using UIKit
+                                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                            }
+                        }) {
+                            Text("Calculate")
+                                .font(AppStyle.Typography.button)
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(viewModel.calculationPerformed ? Color.gray : AppStyle.primaryColor)
+                                .cornerRadius(AppStyle.CornerRadius.medium)
+                                .scaleEffect(viewModel.calculationPerformed ? 1.0 : 1.0)
+                                .animation(.spring(response: 0.3, dampingFraction: 0.6), value: viewModel.calculationPerformed)
+                        }
+                        .buttonStyle(PressableButtonStyle())
+                        .padding(.top, AppStyle.Spacing.small)
                     }
-                    .buttonStyle(PressableButtonStyle())
-                    .padding(.top, AppStyle.Spacing.small)
-                }
                 .padding()
-                .cardStyle()
-                
-                // Results Section (only show when calculation is performed)
-                if viewModel.calculationPerformed {
-                    ResultsSection(viewModel: viewModel)
+                    .cardStyle()
                     
-                    // New Formaldehyde Calculations Section
-                    FormaldehydeCalculationsSection(viewModel: viewModel)
-                }
-                
-                // Footnotes Section
-                FootnotesSection()
+                    // Results Section (only show when calculation is performed)
+                    if viewModel.calculationPerformed {
+                        ResultsSection(viewModel: viewModel)
+                        
+                        // New Formaldehyde Calculations Section
+                        FormaldehydeCalculationsSection(viewModel: viewModel)
+                    }
+                    
+                    // Footnotes Section
+                    FootnotesSection()
             }
             .simultaneousGesture(
                 DragGesture(minimumDistance: 5)

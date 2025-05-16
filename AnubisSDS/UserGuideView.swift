@@ -85,6 +85,12 @@ struct UserGuideView: View {
                         .font(AppStyle.Typography.headline)
                         .foregroundColor(AppStyle.primaryColor)
                         
+                        NavigationLink("12. Symbols Guide") {
+                            SymbolsSection()
+                        }
+                        .font(AppStyle.Typography.headline)
+                        .foregroundColor(AppStyle.primaryColor)
+                        
                         Divider()
                             .padding(.vertical, 8)
                         
@@ -773,7 +779,7 @@ struct DatabaseResetSection: View {
                     Text("2. Database Reset (Settings)")
                         .font(AppStyle.Typography.headline)
                         .foregroundColor(AppStyle.textColor)
-                        .padding(.top)
+                    .padding(.top)
                     
                     VStack(alignment: .leading, spacing: 8) {
                         Text("• Access through Settings in User Guide")
@@ -833,6 +839,165 @@ struct DatabaseResetSection: View {
             .padding()
         }
         .navigationTitle("Database Reset")
+    }
+}
+
+// MARK: - Symbols Section
+struct SymbolsSection: View {
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: AppStyle.Spacing.large) {
+                Group {
+                    Text("Hazard Symbols")
+                        .font(AppStyle.Typography.title)
+                        .foregroundColor(AppStyle.textColor)
+                    
+                    Text("These symbols indicate potential hazards associated with embalming fluids:")
+                        .font(AppStyle.Typography.body)
+                        .foregroundColor(AppStyle.textColor)
+                    
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack(spacing: 12) {
+                            Image("GHS02")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 32, height: 32)
+                            Text("GHS02 - Flammable")
+                                .font(AppStyle.Typography.body)
+                        }
+                        
+                        HStack(spacing: 12) {
+                            Image("GHS05")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 32, height: 32)
+                            Text("GHS05 - Corrosive")
+                                .font(AppStyle.Typography.body)
+                        }
+                        
+                        HStack(spacing: 12) {
+                            Image("GHS06")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 32, height: 32)
+                            Text("GHS06 - Toxic")
+                                .font(AppStyle.Typography.body)
+                        }
+                        
+                        HStack(spacing: 12) {
+                            Image("GHS07")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 32, height: 32)
+                            Text("GHS07 - Harmful")
+                                .font(AppStyle.Typography.body)
+                        }
+                        
+                        HStack(spacing: 12) {
+                            Image("GHS08")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 32, height: 32)
+                            Text("GHS08 - Health Hazard")
+                                .font(AppStyle.Typography.body)
+                        }
+                    }
+                    .padding(.vertical, 8)
+                }
+                
+                Group {
+                    Text("SDS Section Icons")
+                        .font(AppStyle.Typography.title)
+                        .foregroundColor(AppStyle.textColor)
+                        .padding(.top)
+                    
+                    Text("These icons help identify different sections of the Safety Data Sheet:")
+                        .font(AppStyle.Typography.body)
+                        .foregroundColor(AppStyle.textColor)
+                    
+                    VStack(alignment: .leading, spacing: 12) {
+                        IconRow(icon: "doc.text.fill", description: "Identification")
+                        IconRow(icon: "exclamationmark.triangle.fill", description: "Hazards")
+                        IconRow(icon: "list.bullet.clipboard.fill", description: "Composition")
+                        IconRow(icon: "cross.case.fill", description: "First-Aid")
+                        IconRow(icon: "flame.fill", description: "Fire-Fighting")
+                        IconRow(icon: "hand.raised.fill", description: "Handling")
+                        IconRow(icon: "person.fill.checkmark", description: "Exposure Controls")
+                        IconRow(icon: "atom", description: "Properties")
+                        IconRow(icon: "bolt.shield.fill", description: "Stability")
+                        IconRow(icon: "pills.fill", description: "Toxicology")
+                        IconRow(icon: "leaf.fill", description: "Ecological")
+                        IconRow(icon: "trash.fill", description: "Disposal")
+                        IconRow(icon: "truck.box.fill", description: "Transport")
+                        IconRow(icon: "checkmark.seal.fill", description: "Regulatory")
+                        IconRow(icon: "ellipsis.circle.fill", description: "Other Information")
+                    }
+                    .padding(.vertical, 8)
+                }
+                
+                Group {
+                    Text("Navigation Icons")
+                        .font(AppStyle.Typography.title)
+                        .foregroundColor(AppStyle.textColor)
+                        .padding(.top)
+                    
+                    Text("Common icons used throughout the app:")
+                        .font(AppStyle.Typography.body)
+                        .foregroundColor(AppStyle.textColor)
+                    
+                    VStack(alignment: .leading, spacing: 12) {
+                        IconRow(icon: "arrow.clockwise", description: "Refresh/Reset data")
+                        IconRow(icon: "magnifyingglass", description: "Search")
+                        IconRow(icon: "xmark.circle.fill", description: "Clear search or filters")
+                        IconRow(icon: "star.fill", description: "Add to favorites")
+                        IconRow(icon: "star", description: "Remove from favorites")
+                        IconRow(icon: "pencil", description: "Edit")
+                        IconRow(icon: "chevron.right", description: "Navigate to next screen")
+                        IconRow(icon: "xmark", description: "Close or dismiss")
+                    }
+                    .padding(.vertical, 8)
+                }
+                
+                Group {
+                    Text("Tab Bar Icons")
+                        .font(AppStyle.Typography.title)
+                        .foregroundColor(AppStyle.textColor)
+                        .padding(.top)
+                    
+                    Text("Icons used in the main navigation tabs:")
+                        .font(AppStyle.Typography.body)
+                        .foregroundColor(AppStyle.textColor)
+                    
+                    VStack(alignment: .leading, spacing: 12) {
+                        IconRow(icon: "flask", description: "Fluids")
+                        IconRow(icon: "figure", description: "Case Analysis")
+                        IconRow(icon: "function", description: "CH₂O Calculator")
+                        IconRow(icon: "doc.text", description: "SDS")
+                        IconRow(icon: "star.fill", description: "Favorites")
+                    }
+                    .padding(.vertical, 8)
+                }
+            }
+            .padding()
+        }
+        .navigationTitle("Symbols Guide")
+    }
+}
+
+// Helper view for displaying icons with descriptions
+private struct IconRow: View {
+    let icon: String
+    let description: String
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.title2)
+                .foregroundColor(AppStyle.primaryColor)
+                .frame(width: 30)
+            Text(description)
+                .font(AppStyle.Typography.body)
+        }
     }
 }
 

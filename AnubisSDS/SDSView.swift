@@ -32,97 +32,97 @@ struct SDSView: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
+            VStack(spacing: 0) {
             // Header section - keep only reload button
-            VStack(spacing: AppStyle.Spacing.small) {
+                VStack(spacing: AppStyle.Spacing.small) {
+                    HStack {
+                        Spacer()
+                        
+                        // Reload button
+                        Button(action: {
+                            print("Force reloading SDS data...")
+                            DatabaseManager.shared.updateFluidsCache(force: true)
+                            loadFluidsData()
+                        }) {
+                            Image(systemName: "arrow.clockwise")
+                                .foregroundColor(AppStyle.accentColor)
+                        }
+                    }
+                    .padding(.horizontal, AppStyle.Spacing.medium)
+                }
+                .padding(.top, AppStyle.Spacing.small)
+                
+                // Search bar
                 HStack {
-                    Spacer()
-                    
-                    // Reload button
-                    Button(action: {
-                        print("Force reloading SDS data...")
-                        DatabaseManager.shared.updateFluidsCache(force: true)
-                        loadFluidsData()
-                    }) {
-                        Image(systemName: "arrow.clockwise")
-                            .foregroundColor(AppStyle.accentColor)
-                    }
-                }
-                .padding(.horizontal, AppStyle.Spacing.medium)
-            }
-            .padding(.top, AppStyle.Spacing.small)
-            
-            // Search bar
-            HStack {
-                Image(systemName: "magnifyingglass")
-                    .foregroundColor(.gray)
-                
-                TextField("Search fluids...", text: $searchText)
-                    .textFieldStyle(PlainTextFieldStyle())
-                
-                if !searchText.isEmpty {
-                    Button(action: {
-                        searchText = ""
-                    }) {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(.gray)
-                    }
-                }
-            }
-            .padding(8)
-            .background(Color(.systemGray6))
-            .cornerRadius(10)
-            .padding(.horizontal)
-            .padding(.top, AppStyle.Spacing.small)
-            
-            // List of fluids
-            if fluids.isEmpty {
-                VStack(spacing: 16) {
                     Image(systemName: "magnifyingglass")
-                        .font(.system(size: 48))
                         .foregroundColor(.gray)
-                    Text("No Fluids Found")
-                        .font(.headline)
-                    Text("Try adjusting your search or check back later.")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                    
+                    TextField("Search fluids...", text: $searchText)
+                        .textFieldStyle(PlainTextFieldStyle())
+                    
+                    if !searchText.isEmpty {
+                        Button(action: {
+                            searchText = ""
+                        }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.gray)
+                        }
+                    }
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(AppStyle.backgroundColor)
-            } else {
-                List(filteredFluids) { fluid in
-                    NavigationLink(destination: SDSDetailView(fluid: fluid)) {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(fluid.name)
-                                .font(.headline)
-                                .foregroundColor(.primary)
-                            
-                            Text(fluid.manufacturer)
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                            
-                            if let emergencyContact = fluid.emergencyContact {
-                                Text(emergencyContact)
+                .padding(8)
+                .background(Color(.systemGray6))
+                .cornerRadius(10)
+                .padding(.horizontal)
+                .padding(.top, AppStyle.Spacing.small)
+                
+                // List of fluids
+                if fluids.isEmpty {
+                    VStack(spacing: 16) {
+                        Image(systemName: "magnifyingglass")
+                            .font(.system(size: 48))
+                            .foregroundColor(.gray)
+                        Text("No Fluids Found")
+                            .font(.headline)
+                        Text("Try adjusting your search or check back later.")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(AppStyle.backgroundColor)
+                } else {
+                    List(filteredFluids) { fluid in
+                        NavigationLink(destination: SDSDetailView(fluid: fluid)) {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(fluid.name)
+                                    .font(.headline)
+                                    .foregroundColor(.primary)
+                                
+                                Text(fluid.manufacturer)
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)
+                                
+                                if let emergencyContact = fluid.emergencyContact {
+                                    Text(emergencyContact)
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondary)
+                                }
                             }
+                            .padding(.vertical, 4)
                         }
-                        .padding(.vertical, 4)
                     }
-                }
-                .listStyle(PlainListStyle())
-                .background(AppStyle.backgroundColor)
+                    .listStyle(PlainListStyle())
+                    .background(AppStyle.backgroundColor)
                 .scrollDismissesKeyboard(.immediately)
             }
         }
-        .background(AppStyle.backgroundColor)
-        .background(
-            Color.clear
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-                }
-        )
+            .background(AppStyle.backgroundColor)
+            .background(
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                    }
+            )
         .onAppear {
             loadFluidsData()
         }

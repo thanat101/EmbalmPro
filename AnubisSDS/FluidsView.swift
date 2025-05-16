@@ -132,10 +132,10 @@ struct FluidsView: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
+            VStack(spacing: 0) {
             // Header section - keep only About and reload buttons
-            VStack(spacing: AppStyle.Spacing.small) {
-                HStack {
+                VStack(spacing: AppStyle.Spacing.small) {
+                    HStack {
                     Spacer()
                     
                     // About button
@@ -154,35 +154,35 @@ struct FluidsView: View {
                             ))
                         }
                     }
-                    
-                    // Reload button
-                    Button(action: {
+                        
+                        // Reload button
+                        Button(action: {
                         print("Force reloading fluids data...")
-                        DatabaseManager.shared.updateFluidsCache(force: true)
-                        viewModel.loadData()
-                    }) {
-                        Image(systemName: "arrow.clockwise")
-                            .foregroundColor(AppStyle.accentColor)
+                            DatabaseManager.shared.updateFluidsCache(force: true)
+                            viewModel.loadData()
+                        }) {
+                            Image(systemName: "arrow.clockwise")
+                                .foregroundColor(AppStyle.accentColor)
+                        }
                     }
+                    .padding(.horizontal, AppStyle.Spacing.medium)
+                }
+                .padding(.top, AppStyle.Spacing.small)
+                
+                // Total count
+                HStack {
+                Text("Total Chemicals: \(viewModel.fluids.count)")
+                        .font(AppStyle.Typography.subheadline)
+                        .foregroundColor(AppStyle.secondaryTextColor)
+                    Spacer()
                 }
                 .padding(.horizontal, AppStyle.Spacing.medium)
-            }
-            .padding(.top, AppStyle.Spacing.small)
-            
-            // Total count
-            HStack {
-                Text("Total Chemicals: \(viewModel.fluids.count)")
-                    .font(AppStyle.Typography.subheadline)
-                    .foregroundColor(AppStyle.secondaryTextColor)
-                Spacer()
-            }
-            .padding(.horizontal, AppStyle.Spacing.medium)
-            .padding(.top, AppStyle.Spacing.small)
-            
-            // Search bar
-            SearchBar(text: $searchText, placeholder: "Search fluids...")
-                .padding(.horizontal)
-            
+                .padding(.top, AppStyle.Spacing.small)
+                
+                // Search bar
+                SearchBar(text: $searchText, placeholder: "Search fluids...")
+                    .padding(.horizontal)
+                
             // Filter buttons with reset
             VStack(spacing: AppStyle.Spacing.small) {
                 ScrollView(.horizontal, showsIndicators: false) {
@@ -192,8 +192,8 @@ struct FluidsView: View {
                         FilterButton(title: "Use", selection: $selectedUse, options: uses)
                     }
                     .padding(.horizontal)
-                }
-                
+                            }
+                            
                 // Reset filters button
                 if selectedManufacturer != "All" || selectedType != "All" || selectedUse != "All" || !searchText.isEmpty {
                     Button(action: resetView) {
@@ -203,23 +203,23 @@ struct FluidsView: View {
                         }
                         .font(AppStyle.Typography.subheadline)
                         .foregroundColor(AppStyle.primaryColor)
-                    }
+                        }
                     .padding(.horizontal)
                 }
-            }
-            .padding(.vertical, AppStyle.Spacing.small)
+                    }
+                    .padding(.vertical, AppStyle.Spacing.small)
             
             if viewModel.isLoading {
                 ProgressView()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if let error = viewModel.error {
                 Text(error)
-                    .font(AppStyle.Typography.body)
-                    .foregroundColor(.red)
-                    .padding(AppStyle.Spacing.medium)
-                    .cardStyle()
-                    .padding(.horizontal, AppStyle.Spacing.medium)
-                    .padding(.top, AppStyle.Spacing.small)
+                        .font(AppStyle.Typography.body)
+                        .foregroundColor(.red)
+                        .padding(AppStyle.Spacing.medium)
+                        .cardStyle()
+                        .padding(.horizontal, AppStyle.Spacing.medium)
+                        .padding(.top, AppStyle.Spacing.small)
             } else if filteredFluids.isEmpty {
                 VStack(spacing: AppStyle.Spacing.medium) {
                     Image(systemName: "magnifyingglass")
@@ -236,47 +236,47 @@ struct FluidsView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(AppStyle.backgroundColor)
-            } else {
-                List(filteredFluids) { fluid in
-                    NavigationLink {
-                        if let details = viewModel.getFluidDetails(for: fluid) {
-                            FluidDetailView(row: details.row, headers: details.headers)
-                        }
-                    } label: {
-                        HStack {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(fluid.name)
-                                    .font(.headline)
-                                    .foregroundColor(.primary)
-                                
-                                Text(fluid.manufacturer)
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                                
-                                if let use = fluid.use {
-                                    Text(use)
+                } else {
+                    List(filteredFluids) { fluid in
+                        NavigationLink {
+                            if let details = viewModel.getFluidDetails(for: fluid) {
+                                FluidDetailView(row: details.row, headers: details.headers)
+                            }
+                        } label: {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(fluid.name)
+                                        .font(.headline)
+                                        .foregroundColor(.primary)
+                                    
+                                    Text(fluid.manufacturer)
                                         .font(.subheadline)
                                         .foregroundColor(.secondary)
+                                    
+                                    if let use = fluid.use {
+                                        Text(use)
+                                            .font(.subheadline)
+                                            .foregroundColor(.secondary)
+                                    }
                                 }
+                                .padding(.vertical, 4)
+                                
+                                Spacer()
                             }
-                            .padding(.vertical, 4)
-                            
-                            Spacer()
                         }
                     }
-                }
-                .listStyle(PlainListStyle())
+                    .listStyle(PlainListStyle())
                 .scrollDismissesKeyboard(.immediately)
             }
         }
-        .background(AppStyle.backgroundColor)
-        .background(
-            Color.clear
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-                }
-        )
+            .background(AppStyle.backgroundColor)
+            .background(
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                    }
+            )
         .onAppear {
             viewModel.loadData()
         }

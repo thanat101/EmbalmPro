@@ -258,6 +258,31 @@ private struct FullSDSSheetView: View {
     let viewModel: SDSDetailViewModel
     @Binding var isPresented: Bool
     
+    private func getHazardSymbols() -> [String] {
+        var symbols: [String] = []
+        let query = "SELECT HAZARD_GHS02, HAZARD_GHS05, HAZARD_GHS06, HAZARD_GHS07, HAZARD_GHS08, HAZARD_STOT, HAZARD_ASP FROM FLUID WHERE FLUID = '\(viewModel.fluid.name)'"
+        if let result = DatabaseManager.shared.executeQuery(query) {
+            if let row = result.first {
+                let ghs02 = (row["HAZARD_GHS02"] as? NSNumber)?.intValue ?? 0
+                let ghs05 = (row["HAZARD_GHS05"] as? NSNumber)?.intValue ?? 0
+                let ghs06 = (row["HAZARD_GHS06"] as? NSNumber)?.intValue ?? 0
+                let ghs07 = (row["HAZARD_GHS07"] as? NSNumber)?.intValue ?? 0
+                let ghs08 = (row["HAZARD_GHS08"] as? NSNumber)?.intValue ?? 0
+                let stot = (row["HAZARD_STOT"] as? NSNumber)?.intValue ?? 0
+                let asp = (row["HAZARD_ASP"] as? NSNumber)?.intValue ?? 0
+                
+                if ghs02 == 1 { symbols.append("GHS02") }
+                if ghs05 == 1 { symbols.append("GHS05") }
+                if ghs06 == 1 { symbols.append("GHS06") }
+                if ghs07 == 1 { symbols.append("GHS07") }
+                if ghs08 == 1 { symbols.append("GHS08") }
+                if stot == 1 { symbols.append("GHS08") }
+                if asp == 1 { symbols.append("GHS08") }
+            }
+        }
+        return symbols
+    }
+    
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: AppStyle.Spacing.large) {
@@ -274,9 +299,40 @@ private struct FullSDSSheetView: View {
                 }
                 .padding(.horizontal)
                 
-                // All Sections
-                ForEach(viewModel.fullSDSSections, id: \.title) { section in
-                    SDSSectionCard(title: section.title, content: section.content, icon: section.icon)
+                // All Sections with Hazard Symbols between 1 and 2
+                ForEach(Array(viewModel.fullSDSSections.enumerated()), id: \.element.title) { index, section in
+                    VStack(spacing: AppStyle.Spacing.medium) {
+                        // Show the section
+                        SDSSectionCard(title: section.title, content: section.content, icon: section.icon)
+                        
+                        // Add hazard symbols after section 1
+                        if index == 0 {
+                            let symbols = getHazardSymbols()
+                            if !symbols.isEmpty {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("Hazard Symbols")
+                                        .font(.headline)
+                                        .foregroundColor(AppStyle.textColor)
+                                        .padding(.horizontal)
+                                    
+                                    HStack(spacing: 12) {
+                                        ForEach(symbols, id: \.self) { symbol in
+                                            Image(symbol)
+                                                .resizable()
+                                                .scaledToFit()
+                                                .frame(width: 32, height: 32)
+                                        }
+                                    }
+                                    .frame(maxWidth: .infinity, alignment: .center)
+                                    .padding()
+                                    .background(Color(.systemBackground))
+                                    .cornerRadius(12)
+                                    .shadow(color: Color.black.opacity(0.05), radius: 3, x: 0, y: 1)
+                                    .padding(.horizontal)
+                                }
+                            }
+                        }
+                    }
                 }
                 
                 // Footer

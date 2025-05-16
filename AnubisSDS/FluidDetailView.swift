@@ -17,26 +17,80 @@ private struct FluidHeaderView: View {
     var editedValues: [String: String]
     var onValueChanged: (String, String) -> Void
     
+    private func getHazardSymbols() -> [String] {
+        var symbols: [String] = []
+        
+        // Check each hazard field
+        let ghs02 = getValue(for: "HAZARD_GHS02", in: row, headers: headers)
+        if ghs02 == "1" {
+            symbols.append("GHS02")
+        }
+        
+        let ghs05 = getValue(for: "HAZARD_GHS05", in: row, headers: headers)
+        if ghs05 == "1" {
+            symbols.append("GHS05")
+        }
+        
+        let ghs06 = getValue(for: "HAZARD_GHS06", in: row, headers: headers)
+        if ghs06 == "1" {
+            symbols.append("GHS06")
+        }
+        
+        let ghs07 = getValue(for: "HAZARD_GHS07", in: row, headers: headers)
+        if ghs07 == "1" {
+            symbols.append("GHS07")
+        }
+        
+        let ghs08 = getValue(for: "HAZARD_GHS08", in: row, headers: headers)
+        if ghs08 == "1" {
+            symbols.append("GHS08")
+        }
+        
+        let stot = getValue(for: "HAZARD_STOT", in: row, headers: headers)
+        if stot == "1" {
+            symbols.append("GHS08") // STOT uses GHS08
+        }
+        
+        let asp = getValue(for: "HAZARD_ASP", in: row, headers: headers)
+        if asp == "1" {
+            symbols.append("GHS08") // ASP uses GHS08
+        }
+        
+        return symbols
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: AppStyle.Spacing.large) {
-            // Fluid Name Section
+            // Fluid Name Section with Hazard Symbols
             VStack(alignment: .leading, spacing: AppStyle.Spacing.small) {
                 Text("Fluid Name")
                     .font(AppStyle.Typography.caption)
                     .foregroundColor(AppStyle.secondaryTextColor)
                     .textCase(.uppercase)
                 
-                if isEditing {
-                    TextField("Fluid Name", text: Binding(
-                        get: { editedValues["FLUID"] ?? getValue(for: "FLUID", in: row, headers: headers) },
-                        set: { onValueChanged("FLUID", $0) }
-                    ))
-                    .font(AppStyle.Typography.title)
-                    .foregroundColor(AppStyle.textColor)
-                } else {
-                    Text(getValue(for: "FLUID", in: row, headers: headers))
+                HStack(alignment: .center, spacing: 8) {
+                    if isEditing {
+                        TextField("Fluid Name", text: Binding(
+                            get: { editedValues["FLUID"] ?? getValue(for: "FLUID", in: row, headers: headers) },
+                            set: { onValueChanged("FLUID", $0) }
+                        ))
                         .font(AppStyle.Typography.title)
                         .foregroundColor(AppStyle.textColor)
+                    } else {
+                        Text(getValue(for: "FLUID", in: row, headers: headers))
+                            .font(AppStyle.Typography.title)
+                            .foregroundColor(AppStyle.textColor)
+                    }
+                    
+                    // Hazard Symbols
+                    HStack(spacing: 4) {
+                        ForEach(getHazardSymbols(), id: \.self) { symbol in
+                            Image(symbol)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 24, height: 24)
+                        }
+                    }
                 }
             }
             

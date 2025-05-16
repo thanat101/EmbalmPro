@@ -59,19 +59,19 @@ struct AnubisSDSApp: App {
                             }
                         )) {
                             NavigationStack {
-                                WelcomeView(isPresented: Binding(
-                                    get: { 
-                                        if !subscriptionManager.isSubscribed {
-                                            return true
-                                        }
-                                        return !hasShownWelcome && !dontShowWelcomeAgain
-                                    },
-                                    set: { newValue in
-                                        if !newValue {
-                                            hasShownWelcome = true
-                                        }
+                            WelcomeView(isPresented: Binding(
+                                get: { 
+                                    if !subscriptionManager.isSubscribed {
+                                        return true
                                     }
-                                ))
+                                    return !hasShownWelcome && !dontShowWelcomeAgain
+                                },
+                                set: { newValue in
+                                    if !newValue {
+                                        hasShownWelcome = true
+                                    }
+                                }
+                            ))
                             }
                         }
                 }

@@ -92,94 +92,94 @@ struct FavoritesView: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Header section
-            HStack {
-                Text("Favorite Fluids: \(filteredFluids.count)")
-                    .font(AppStyle.Typography.subheadline)
-                    .foregroundColor(AppStyle.secondaryTextColor)
-                
-                Spacer()
-                
-                // Reload button
-                Button(action: {
-                    print("Force reloading favorites data...")
-                    DatabaseManager.shared.updateFluidsCache()
-                    viewModel.loadData()
-                }) {
-                    Image(systemName: "arrow.clockwise")
-                        .foregroundColor(AppStyle.accentColor)
+            VStack(spacing: 0) {
+                // Header section
+                HStack {
+                    Text("Favorite Fluids: \(filteredFluids.count)")
+                        .font(AppStyle.Typography.subheadline)
+                        .foregroundColor(AppStyle.secondaryTextColor)
+                    
+                    Spacer()
+                    
+                    // Reload button
+                    Button(action: {
+                        print("Force reloading favorites data...")
+                        DatabaseManager.shared.updateFluidsCache()
+                        viewModel.loadData()
+                    }) {
+                        Image(systemName: "arrow.clockwise")
+                            .foregroundColor(AppStyle.accentColor)
+                    }
                 }
-            }
-            .padding(.horizontal, AppStyle.Spacing.medium)
-            .padding(.top, AppStyle.Spacing.small)
-            .padding(.bottom, AppStyle.Spacing.medium)
-            
-            // Search bar
-            SearchBar(text: $searchText, placeholder: "Search favorites...")
-                .padding(.horizontal)
-            
-            if viewModel.isLoading {
-                ProgressView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if let error = viewModel.error {
-                Text(error)
-                    .font(AppStyle.Typography.body)
-                    .foregroundColor(.red)
-                    .padding(AppStyle.Spacing.medium)
-                    .cardStyle()
-                    .padding(.horizontal, AppStyle.Spacing.medium)
-                    .padding(.top, AppStyle.Spacing.small)
-            } else if filteredFluids.isEmpty {
-                VStack(spacing: AppStyle.Spacing.medium) {
-                    Image(systemName: "star.slash")
-                        .font(.system(size: 50))
-                        .foregroundColor(AppStyle.secondaryTextColor)
-                    Text("No Favorite Fluids")
-                        .font(AppStyle.Typography.headline)
-                        .foregroundColor(AppStyle.secondaryTextColor)
-                    Text("Add fluids to your favorites by tapping the star icon on any fluid card")
+                .padding(.horizontal, AppStyle.Spacing.medium)
+                .padding(.top, AppStyle.Spacing.small)
+                .padding(.bottom, AppStyle.Spacing.medium)
+                
+                // Search bar
+                SearchBar(text: $searchText, placeholder: "Search favorites...")
+                    .padding(.horizontal)
+                
+                if viewModel.isLoading {
+                    ProgressView()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if let error = viewModel.error {
+                    Text(error)
                         .font(AppStyle.Typography.body)
-                        .foregroundColor(AppStyle.secondaryTextColor)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(AppStyle.backgroundColor)
-            } else {
-                List(filteredFluids) { fluid in
-                    NavigationLink {
-                        if let details = viewModel.getFluidDetails(for: fluid) {
-                            FluidDetailView(row: details.row, headers: details.headers)
-                        }
-                    } label: {
-                        HStack {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(fluid.name)
-                                    .font(.headline)
-                                    .foregroundColor(.primary)
-                                
-                                Text(fluid.manufacturer)
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                                
-                                if let use = fluid.use {
-                                    Text(use)
+                        .foregroundColor(.red)
+                        .padding(AppStyle.Spacing.medium)
+                        .cardStyle()
+                        .padding(.horizontal, AppStyle.Spacing.medium)
+                        .padding(.top, AppStyle.Spacing.small)
+                } else if filteredFluids.isEmpty {
+                    VStack(spacing: AppStyle.Spacing.medium) {
+                        Image(systemName: "star.slash")
+                            .font(.system(size: 50))
+                            .foregroundColor(AppStyle.secondaryTextColor)
+                        Text("No Favorite Fluids")
+                            .font(AppStyle.Typography.headline)
+                            .foregroundColor(AppStyle.secondaryTextColor)
+                        Text("Add fluids to your favorites by tapping the star icon on any fluid card")
+                            .font(AppStyle.Typography.body)
+                            .foregroundColor(AppStyle.secondaryTextColor)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(AppStyle.backgroundColor)
+                } else {
+                    List(filteredFluids) { fluid in
+                        NavigationLink {
+                            if let details = viewModel.getFluidDetails(for: fluid) {
+                                FluidDetailView(row: details.row, headers: details.headers)
+                            }
+                        } label: {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(fluid.name)
+                                        .font(.headline)
+                                        .foregroundColor(.primary)
+                                    
+                                    Text(fluid.manufacturer)
                                         .font(.subheadline)
                                         .foregroundColor(.secondary)
+                                    
+                                    if let use = fluid.use {
+                                        Text(use)
+                                            .font(.subheadline)
+                                            .foregroundColor(.secondary)
+                                    }
                                 }
-                            }
-                            .padding(.vertical, 4)
-                            
-                            Spacer()
-                            
-                            // Favorite button
-                            Button(action: {
-                                FavoritesManager.shared.removeFavorite(fluidName: fluid.name)
-                                viewModel.loadData() // Reload the list
-                            }) {
-                                Image(systemName: "star.fill")
-                                    .foregroundColor(.yellow)
+                                .padding(.vertical, 4)
+                                
+                                Spacer()
+                                
+                                // Favorite button
+                                Button(action: {
+                                    FavoritesManager.shared.removeFavorite(fluidName: fluid.name)
+                                    viewModel.loadData() // Reload the list
+                                }) {
+                                    Image(systemName: "star.fill")
+                                        .foregroundColor(.yellow)
                             }
                         }
                     }
@@ -187,14 +187,14 @@ struct FavoritesView: View {
                 .listStyle(PlainListStyle())
             }
         }
-        .background(AppStyle.backgroundColor)
-        .background(
-            Color.clear
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-                }
-        )
+            .background(AppStyle.backgroundColor)
+            .background(
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                    }
+            )
         .onAppear {
             viewModel.loadData()
         }
