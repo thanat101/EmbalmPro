@@ -104,6 +104,7 @@ class SDSDetailViewModel: ObservableObject {
     
     init(fluid: Fluid) {
         self.fluid = fluid
+        print("🔍 Initializing SDSDetailView for fluid: \(fluid.name)")
     }
     
     func updateFluid(_ newFluid: Fluid) {
@@ -437,6 +438,31 @@ private struct SDSHeaderView: View {
     let fluid: Fluid
     let onViewFullSDSTapped: () -> Void
     
+    private func getHazardSymbols() -> [String] {
+        var symbols: [String] = []
+        let query = "SELECT HAZARD_GHS02, HAZARD_GHS05, HAZARD_GHS06, HAZARD_GHS07, HAZARD_GHS08, HAZARD_STOT, HAZARD_ASP FROM FLUID WHERE FLUID = '\(fluid.name)'"
+        if let result = DatabaseManager.shared.executeQuery(query) {
+            if let row = result.first {
+                let ghs02 = (row["HAZARD_GHS02"] as? NSNumber)?.intValue ?? 0
+                let ghs05 = (row["HAZARD_GHS05"] as? NSNumber)?.intValue ?? 0
+                let ghs06 = (row["HAZARD_GHS06"] as? NSNumber)?.intValue ?? 0
+                let ghs07 = (row["HAZARD_GHS07"] as? NSNumber)?.intValue ?? 0
+                let ghs08 = (row["HAZARD_GHS08"] as? NSNumber)?.intValue ?? 0
+                let stot = (row["HAZARD_STOT"] as? NSNumber)?.intValue ?? 0
+                let asp = (row["HAZARD_ASP"] as? NSNumber)?.intValue ?? 0
+                
+                if ghs02 == 1 { symbols.append("GHS02") }
+                if ghs05 == 1 { symbols.append("GHS05") }
+                if ghs06 == 1 { symbols.append("GHS06") }
+                if ghs07 == 1 { symbols.append("GHS07") }
+                if ghs08 == 1 { symbols.append("GHS08") }
+                if stot == 1 { symbols.append("GHS08") }
+                if asp == 1 { symbols.append("GHS08") }
+            }
+        }
+        return symbols
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text("SAFETY DATA SHEET")
@@ -445,6 +471,28 @@ private struct SDSHeaderView: View {
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.bottom, 2)
             
+            // Product Info Section
+            VStack(alignment: .leading, spacing: 4) {
+                InfoRow(label: "Product Name", value: fluid.name)
+                InfoRow(label: "Manufacturer", value: fluid.manufacturer)
+            }
+            .padding(.bottom, 4)
+            
+            // Hazard Symbols
+            let symbols = getHazardSymbols()
+            if !symbols.isEmpty {
+                HStack(spacing: 8) {
+                    ForEach(symbols, id: \.self) { symbol in
+                        Image(symbol)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 24, height: 24)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.bottom, 4)
+            }
+            
             // Emergency Contact Section
             if let emergencyContact = fluid.emergencyContact {
                 EmergencyContactButton(contact: emergencyContact)
@@ -452,12 +500,6 @@ private struct SDSHeaderView: View {
             
             // View Full SDS Button
             ViewFullSDSButton(action: onViewFullSDSTapped)
-            
-            // Identification Section
-            Group {
-                InfoRow(label: "Product Name", value: fluid.name)
-                InfoRow(label: "Manufacturer", value: fluid.manufacturer)
-            }
         }
         .padding(.horizontal)
         .padding(.vertical, 4)
@@ -567,6 +609,7 @@ struct SDSDetailView: View {
     
     init(fluid: Fluid) {
         _viewModel = StateObject(wrappedValue: SDSDetailViewModel(fluid: fluid))
+        print("🔍 Initializing SDSDetailView for fluid: \(fluid.name)")
     }
     
     private func refreshData() {
@@ -625,8 +668,11 @@ struct SDSDetailView: View {
                     }
                 }
                 
-                // Footer Section
-                SDSFooterView(fluid: viewModel.fluid)
+                // Footer Section with Hazard Symbols
+                FooterCard(fluid: viewModel.fluid)
+                    .onAppear {
+                        print("📱 FooterCard appeared for fluid: \(viewModel.fluid.name)")
+                    }
             }
             .padding(.vertical, 4)
         }
