@@ -156,7 +156,6 @@ struct GettingStartedSection: View {
                         .foregroundColor(AppStyle.textColor)
                     
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("• Tap anywhere slightly above or below the text input area - be careful not to tap a result because that will take you to more details")
                         Text("• Press the 'Return' key after entering text")
                         Text("• Scroll the screen up or down to dismiss the keyboard")
                     }
@@ -655,7 +654,7 @@ struct TipsAndTricksSection: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("• Quickly dismiss the keyboard by scrolling the screen")
                         Text("• Press the Return key to dismiss the keyboard after entering text")
-                        Text("• Tap outside the search bar or text field to dismiss the keyboard")
+                        
                     }
                     .font(AppStyle.Typography.body)
                     .foregroundColor(AppStyle.textColor)
@@ -716,10 +715,10 @@ struct EditFeatureSection: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("• The app does not support adding completely new fluids")
                         Text("• To add a new fluid, use the provided sample fluids:")
-                        Text("  - 'Sample One' and 'Sample Two' are included for this purpose")
+                        Text("  - 'MY FAV' and 'MY FAV GEL' are included for this purpose")
                         Text("  - Edit these samples to create your custom fluid")
                         Text("  - Once a fluid has been edited, the change cannot be undone, but can only be re-edited")
-                        Text("  - To revert back to original database, the app must be deleted and then reinstalled")
+                        Text("  - To revert back to original database, the app must be 'Reset' from settings on bottom of user guide")
                         Text("  - Note: Reinstalling will cause you to lose all edits made to other fluids")
                     }
                     .font(AppStyle.Typography.body)
@@ -733,7 +732,7 @@ struct EditFeatureSection: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("• Changes are saved immediately but require a reset from the Fluids tab to be visible")
                         Text("• Once a fluid is edited, changes cannot be undone, but can be re-edited")
-                        Text("• To restore original database, you must delete and reinstall the app")
+                        Text("• To restore original database, you must 'Reset database in settings; bottom of 'User Guide' page")
                         Text("• Warning: Reinstalling will cause you to lose all edits made to other fluids")
                     }
                     .font(AppStyle.Typography.body)

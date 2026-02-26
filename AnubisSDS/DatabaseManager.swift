@@ -390,7 +390,7 @@ class DatabaseManager {
         
         let query = """
             SELECT * FROM FLUID 
-            ORDER BY FLUID ASC
+            ORDER BY TYPE DESC, FLUID ASC
         """
         
         print("\n=== Executing Query ===")
