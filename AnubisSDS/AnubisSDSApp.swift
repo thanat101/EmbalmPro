@@ -77,6 +77,7 @@ struct AnubisSDSApp: App {
                 }
             }
             .task {
+                subscriptionManager.startTransactionUpdatesListener()
                 await subscriptionManager.checkSubscriptionStatus()
                 isInitialized = true
             }

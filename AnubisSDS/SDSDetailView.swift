@@ -546,7 +546,7 @@ private struct SDSHeaderView: View {
             if !symbols.isEmpty {
                 HStack(spacing: 8) {
                     ForEach(symbols, id: \.self) { symbol in
-                        GHSPlacardImage(name: symbol, size: 24)
+                        GHSPlacardImage(name: symbol, size: 32)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .center)

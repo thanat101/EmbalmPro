@@ -85,10 +85,7 @@ private struct FluidHeaderView: View {
                     // Hazard Symbols
                     HStack(spacing: 4) {
                         ForEach(getHazardSymbols(), id: \.self) { symbol in
-                            Image(symbol)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 24, height: 24)
+                            GHSPlacardImage(name: symbol, size: 32)
                         }
                     }
                 }
