@@ -96,6 +96,15 @@ private struct RestartView: View {
 
 private struct InitializationView: View {
     var body: some View {
-        EmptyView()
+        VStack(spacing: 16) {
+            ProgressView()
+                .scaleEffect(1.5)
+                .tint(.blue)
+            Text("Loading…")
+                .font(.headline)
+                .foregroundColor(.primary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(.systemGroupedBackground))
     }
 }

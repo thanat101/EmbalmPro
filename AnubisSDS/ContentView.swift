@@ -90,7 +90,7 @@ struct ContentView: View {
                     .id(selectedTab)
             .onChange(of: selectedTab) { _ in
                 NotificationCenter.default.post(name: NSNotification.Name("ResetNavigation"), object: nil)
-        }
+            }
     }
 }
 

@@ -1,5 +1,14 @@
 import SwiftUI
 
+/// Extracts only digits and + from a string for use in tel: URLs. Returns nil if fewer than 7 digits.
+private func dialableNumber(from string: String) -> String? {
+    let allowed = CharacterSet(charactersIn: "0123456789+")
+    let filtered = string.unicodeScalars.filter { allowed.contains($0) }.map { Character($0) }
+    let result = String(filtered)
+    let digitCount = result.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0) }.count
+    return digitCount >= 7 ? result : nil
+}
+
 // MARK: - SDS Section Detail View
 struct SDSSectionDetailView: View {
     let title: String
@@ -317,10 +326,7 @@ private struct FullSDSSheetView: View {
                                     
                                     HStack(spacing: 12) {
                                         ForEach(symbols, id: \.self) { symbol in
-                                            Image(symbol)
-                                                .resizable()
-                                                .scaledToFit()
-                                                .frame(width: 32, height: 32)
+                                            GHSPlacardImage(name: symbol, size: 32)
                                         }
                                     }
                                     .frame(maxWidth: .infinity, alignment: .center)
@@ -382,7 +388,8 @@ private struct ProductInfoCard: View {
                         }
                         
                         Button(action: {
-                            if let url = URL(string: "tel:\(emergencyContact.replacingOccurrences(of: "-", with: ""))") {
+                            if let number = dialableNumber(from: emergencyContact),
+                               let url = URL(string: "tel:\(number)") {
                                 UIApplication.shared.open(url)
                             }
                         }) {
@@ -539,10 +546,7 @@ private struct SDSHeaderView: View {
             if !symbols.isEmpty {
                 HStack(spacing: 8) {
                     ForEach(symbols, id: \.self) { symbol in
-                        Image(symbol)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 24, height: 24)
+                        GHSPlacardImage(name: symbol, size: 24)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .center)
@@ -568,7 +572,8 @@ private struct EmergencyContactButton: View {
     
     var body: some View {
         Button(action: {
-            if let url = URL(string: "tel:\(contact.replacingOccurrences(of: "-", with: ""))") {
+            if let number = dialableNumber(from: contact),
+               let url = URL(string: "tel:\(number)") {
                 UIApplication.shared.open(url)
             }
         }) {

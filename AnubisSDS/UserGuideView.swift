@@ -857,46 +857,31 @@ struct SymbolsSection: View {
                     
                     VStack(alignment: .leading, spacing: 12) {
                         HStack(spacing: 12) {
-                            Image("GHS02")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 32, height: 32)
+                            GHSPlacardImage(name: "GHS02", size: 32)
                             Text("GHS02 - Flammable")
                                 .font(AppStyle.Typography.body)
                         }
                         
                         HStack(spacing: 12) {
-                            Image("GHS05")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 32, height: 32)
+                            GHSPlacardImage(name: "GHS05", size: 32)
                             Text("GHS05 - Corrosive")
                                 .font(AppStyle.Typography.body)
                         }
                         
                         HStack(spacing: 12) {
-                            Image("GHS06")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 32, height: 32)
+                            GHSPlacardImage(name: "GHS06", size: 32)
                             Text("GHS06 - Toxic")
                                 .font(AppStyle.Typography.body)
                         }
                         
                         HStack(spacing: 12) {
-                            Image("GHS07")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 32, height: 32)
+                            GHSPlacardImage(name: "GHS07", size: 32)
                             Text("GHS07 - Harmful")
                                 .font(AppStyle.Typography.body)
                         }
                         
                         HStack(spacing: 12) {
-                            Image("GHS08")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 32, height: 32)
+                            GHSPlacardImage(name: "GHS08", size: 32)
                             Text("GHS08 - Health Hazard")
                                 .font(AppStyle.Typography.body)
                         }
