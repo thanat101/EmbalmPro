@@ -300,9 +300,6 @@ struct FluidDetailView: View {
         
         // Initialize isFavorite state
         let fluidName = getValue(for: "FLUID", in: row, headers: headers)
-        #if DEBUG
-        print("🔍 Initializing FluidDetailView for fluid: \(fluidName)")
-        #endif
         
         if !fluidName.isEmpty {
             _isFavorite = State(initialValue: FavoritesManager.shared.isFavorite(fluidName: fluidName))
@@ -390,16 +387,18 @@ struct FluidDetailView: View {
                     fluid: fluid
                 )
                 .padding(.horizontal)
-                .onAppear {
-                    updateDebugStatus("🔍 Main view appeared with fluid: \(fluid != nil ? "available" : "nil")")
-                    tryLoadFluid()
-                }
             }
             .padding(.vertical, AppStyle.Spacing.medium)
         }
         .background(Color(.systemGroupedBackground))
         .navigationTitle("Fluid Details")
         .navigationBarTitleDisplayMode(.inline)
+        .task {
+            if !hasAttemptedLoad {
+                updateDebugStatus("🔍 Preparing FluidDetailView for fluid: \(fluidName)")
+                tryLoadFluid()
+            }
+        }
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 HStack(spacing: 16) {

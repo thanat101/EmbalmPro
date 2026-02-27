@@ -1,5 +1,17 @@
 import SwiftUI
 
+private func logTS(_ message: String, start: Date? = nil) {
+    let now = Date()
+    if let start = start {
+        let elapsed = now.timeIntervalSince(start) * 1000
+        print("[⏱️ \(Int(elapsed)) ms] \(message)")
+    } else {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm:ss.SSS"
+        print("[\(formatter.string(from: now))] \(message)")
+    }
+}
+
 // MARK: - Fluids View Model
 @MainActor
 class FluidsViewModel: ObservableObject {
@@ -10,47 +22,74 @@ class FluidsViewModel: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var error: String?
     
+    private var loadStart: Date?
+    
     func loadData(forceRefresh: Bool = false) {
+        loadStart = Date()
+        logTS("FluidsViewModel.loadData() invoked")
+        
         print("\n=== Loading Fluids ===")
         print("🔄 Starting data load process...")
         isLoading = true
         error = nil
+        logTS("Set isLoading=true, cleared error")
         
         // If forcing refresh, update cache first
         if forceRefresh {
-            print("🔄 Force refreshing cache...")
+            let t0 = Date()
+            logTS("Force refreshing cache: start")
             DatabaseManager.shared.updateFluidsCache(force: true)
+            logTS("Force refreshing cache: end", start: t0)
         }
         
         // Try to get from cache first
         if let cached = DatabaseManager.shared.getCachedFluids() {
+            if let start = loadStart { logTS("Cache hit: assigning cached data", start: start) }
             print("📦 Using cached fluids data")
             print("📊 Cache contains \(cached.fluids.count) fluids")
             fluids = cached.fluids
             headers = cached.headers
             rows = cached.rows
             isLoading = false
+            if let start = loadStart { logTS("Finished load (from cache)", start: start) }
             print("✅ Finished Loading Fluids (from cache)")
             print("=== Cache Load Complete ===\n")
             return
         }
         
-        print("🔄 Cache not available, loading from database...")
-        // If not in cache, load from database and update cache
-        DatabaseManager.shared.updateFluidsCache()
-        if let cached = DatabaseManager.shared.getCachedFluids() {
-            print("📦 Successfully loaded from database")
-            print("📊 Loaded \(cached.fluids.count) fluids")
-            fluids = cached.fluids
-            headers = cached.headers
-            rows = cached.rows
-        } else {
-            print("❌ Failed to load fluids from database")
-            error = "Failed to load fluids from database"
+        print("🔄 Cache not available, loading from database asynchronously…")
+        if let start = loadStart {
+            logTS("Cache miss: begin async DB update", start: start)
+        }
+
+        // Build cache off the main thread to avoid blocking first frame
+        DispatchQueue.global(qos: .userInitiated).async {
+            let dbStart = Date()
+            logTS("DB update start")
+            DatabaseManager.shared.updateFluidsCache()
+            logTS("DB update finished", start: dbStart)
+            let cached = DatabaseManager.shared.getCachedFluids()
+            DispatchQueue.main.async {
+                if let cached = cached {
+                    if let start = self.loadStart { logTS("Assigning loaded data to view model", start: start) }
+                    print("📦 Successfully loaded from database (async)")
+                    print("📊 Loaded \(cached.fluids.count) fluids")
+                    self.fluids = cached.fluids
+                    self.headers = cached.headers
+                    self.rows = cached.rows
+                    self.error = nil
+                } else {
+                    print("❌ Failed to load fluids from database (async)")
+                    self.error = "Failed to load fluids from database"
+                }
+                self.isLoading = false
+                if let start = self.loadStart { logTS("Finished load (async DB)", start: start) }
+                print("=== Database Load Complete (async) ===\n")
+            }
         }
         
-        isLoading = false
-        print("=== Database Load Complete ===\n")
+        // Early return so UI can render while cache builds
+        return
     }
     
     func getFluidDetails(for fluid: Fluid) -> (row: [String], headers: [String])? {
@@ -209,50 +248,67 @@ struct FluidsView: View {
                     }
                     .padding(.vertical, AppStyle.Spacing.small)
             
-            if viewModel.isLoading {
-                ProgressView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if let error = viewModel.error {
-                Text(error)
+            Group {
+                if viewModel.isLoading {
+                    ProgressView()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if let error = viewModel.error {
+                    Text(error)
                         .font(AppStyle.Typography.body)
                         .foregroundColor(.red)
                         .padding(AppStyle.Spacing.medium)
                         .cardStyle()
                         .padding(.horizontal, AppStyle.Spacing.medium)
                         .padding(.top, AppStyle.Spacing.small)
-            } else if filteredFluids.isEmpty {
-                VStack(spacing: AppStyle.Spacing.medium) {
-                    Image(systemName: "magnifyingglass")
-                        .font(.system(size: 50))
-                        .foregroundColor(AppStyle.secondaryTextColor)
-                    Text("No Fluids Found")
-                        .font(AppStyle.Typography.headline)
-                        .foregroundColor(AppStyle.secondaryTextColor)
-                    Text("Try adjusting your search or filters")
-                        .font(AppStyle.Typography.body)
-                        .foregroundColor(AppStyle.secondaryTextColor)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(AppStyle.backgroundColor)
+                } else if filteredFluids.isEmpty {
+                    VStack(spacing: AppStyle.Spacing.medium) {
+                        Image(systemName: "magnifyingglass")
+                            .font(.system(size: 50))
+                            .foregroundColor(AppStyle.secondaryTextColor)
+                        Text("No Fluids Found")
+                            .font(AppStyle.Typography.headline)
+                            .foregroundColor(AppStyle.secondaryTextColor)
+                        Text("Try adjusting your search or filters")
+                            .font(AppStyle.Typography.body)
+                            .foregroundColor(AppStyle.secondaryTextColor)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(AppStyle.backgroundColor)
                 } else {
                     List(filteredFluids) { fluid in
-                        NavigationLink {
-                            if let details = viewModel.getFluidDetails(for: fluid) {
+                        if let details = viewModel.getFluidDetails(for: fluid) {
+                            NavigationLink(destination: {
                                 FluidDetailView(row: details.row, headers: details.headers)
+                            }) {
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(fluid.name)
+                                            .font(.headline)
+                                            .foregroundColor(.primary)
+                                        Text(fluid.manufacturer)
+                                            .font(.subheadline)
+                                            .foregroundColor(.secondary)
+                                        if let use = fluid.use {
+                                            Text(use)
+                                                .font(.subheadline)
+                                                .foregroundColor(.secondary)
+                                        }
+                                    }
+                                    .padding(.vertical, 4)
+                                    Spacer()
+                                }
                             }
-                        } label: {
+                        } else {
                             HStack {
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(fluid.name)
                                         .font(.headline)
                                         .foregroundColor(.primary)
-                                    
                                     Text(fluid.manufacturer)
                                         .font(.subheadline)
                                         .foregroundColor(.secondary)
-                                    
                                     if let use = fluid.use {
                                         Text(use)
                                             .font(.subheadline)
@@ -260,13 +316,14 @@ struct FluidsView: View {
                                     }
                                 }
                                 .padding(.vertical, 4)
-                                
                                 Spacer()
                             }
+                            .contentShape(Rectangle())
                         }
                     }
                     .listStyle(PlainListStyle())
-                .scrollDismissesKeyboard(.immediately)
+                    .scrollDismissesKeyboard(.immediately)
+                }
             }
         }
             .background(AppStyle.backgroundColor)
@@ -278,6 +335,7 @@ struct FluidsView: View {
                     }
             )
         .onAppear {
+            logTS("FluidsView.onAppear")
             viewModel.loadData()
         }
         .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("ResetNavigation"))) { _ in
@@ -313,3 +371,4 @@ struct AboutView: View {
     FluidsView()
 } 
  
+

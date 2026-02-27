@@ -6,6 +6,10 @@ class DatabaseManager {
     private var db: OpaquePointer?
     private let databaseVersion = 1 // For future schema updates
     
+    // Guard to prevent duplicate cache updates
+    private var isUpdatingFluidsCache = false
+    private let cacheUpdateQueue = DispatchQueue(label: "db.cache.update.queue", qos: .userInitiated)
+    
     // Add static cache for fluids
     private static var cachedFluids: [Fluid]?
     private static var cachedFluidsHeaders: [String] = []
@@ -375,6 +379,23 @@ class DatabaseManager {
     // Optimize the cache update to be more efficient
     func updateFluidsCache(force: Bool = false) {
         print("\n=== Updating Fluids Cache ===")
+        
+        // Prevent duplicate concurrent updates unless forced
+        var shouldProceed = true
+        cacheUpdateQueue.sync {
+            if self.isUpdatingFluidsCache && !force {
+                shouldProceed = false
+            } else {
+                self.isUpdatingFluidsCache = true
+            }
+        }
+        if !shouldProceed {
+            print("🔁 Skipping duplicate fluids cache update")
+            return
+        }
+        defer {
+            cacheUpdateQueue.sync { self.isUpdatingFluidsCache = false }
+        }
         
         // Check if we have a valid cache and not forcing refresh
         if !force, let _ = getCachedFluids() {

@@ -60,47 +60,88 @@ class CaseViewModel: ObservableObject {
         print("\n=== Loading Conditions Data ===")
         isLoading = true
         errorMessage = nil
-        
-        // First, let's check what tables are available
-        let tableQuery = """
-            SELECT name FROM sqlite_master 
-            WHERE type='table' 
-            AND name NOT LIKE 'sqlite_%'
-        """
-        
-        if let tables = DatabaseManager.shared.executeQuery(tableQuery) {
-            print("\nAvailable tables in database:")
-            for table in tables {
-                if let tableName = table["name"] as? String {
-                    print("- \(tableName)")
-                }
+
+        // Try cache first to avoid re-querying and speed up perceived performance
+        if DatabaseManager.shared.getCachedFluids() != nil {
+            // Reconstruct headers and rows for conditions if present in cache (best-effort)
+            // If your cache doesn't carry conditions, we'll fall back to DB query below.
+            // We keep this branch lightweight and non-blocking.
+            
+            // Best-effort: attempt to hydrate conditions from a lightweight cache to improve perceived performance
+            if let cached = UserDefaults.standard.object(forKey: "CachedConditionsPayload") as? [String: Any],
+               let cachedHeaders = cached["headers"] as? [String],
+               let cachedRows = cached["rows"] as? [[String]],
+               !cachedHeaders.isEmpty,
+               !cachedRows.isEmpty {
+                // Apply on main actor synchronously since we're already on main here
+                self.headers = cachedHeaders
+                self.conditionsData = cachedRows
+                print("Hydrated conditions from UserDefaults cache: \(cachedRows.count) rows")
             }
         }
-        
-        // Now try to load the conditions data with the correct column name
-        let query = """
-            SELECT "CASE TYPE", "SOLUTION STRENGTH", "CH2O INDEX", "STRENGTH (%)", 
-                   "SPECIAL TREATMENT", "SUGGESTED ACCESSORY/SUPPLIMENTAL", 
-                   "HUMECTANT", "INSTRUCTIONS"
-            FROM CONDITIONS 
-            ORDER BY "CASE TYPE" ASC
-        """
-        
-        print("\nTrying query: \(query)")
-        if let results = DatabaseManager.shared.executeQuery(query) {
-            print("Raw query returned \(results.count) results")
-            
-            if results.isEmpty {
-                print("WARNING: No conditions found in database")
-                errorMessage = "No conditions found in database"
-            } else {
-                // Get headers from the first result
-                headers = Array(results[0].keys).sorted()
-                print("Available headers: \(headers.joined(separator: ", "))")
-                
-                // Convert results to rows
-                conditionsData = results.map { dict in
-                    headers.map { header in
+
+        // Perform heavy DB work off the main thread
+        Task.detached {
+            // First, list tables (debug aid). This is safe off-main as it uses DB directly.
+            let tableQuery = """
+                SELECT name FROM sqlite_master 
+                WHERE type='table' 
+                AND name NOT LIKE 'sqlite_%'
+            """
+
+            if let tables = DatabaseManager.shared.executeQuery(tableQuery) {
+                print("\nAvailable tables in database:")
+                for table in tables {
+                    if let tableName = table["name"] as? String {
+                        print("- \(tableName)")
+                    }
+                }
+            }
+
+            // Main conditions query
+            let query = """
+                SELECT "CASE TYPE", "SOLUTION STRENGTH", "CH2O INDEX", "STRENGTH (%)", 
+                       "SPECIAL TREATMENT", "SUGGESTED ACCESSORY/SUPPLIMENTAL", 
+                       "HUMECTANT", "INSTRUCTIONS"
+                FROM CONDITIONS 
+                ORDER BY "CASE TYPE" ASC
+            """
+
+            print("\nTrying query: \(query)")
+            let results = DatabaseManager.shared.executeQuery(query)
+
+            await MainActor.run {
+                defer {
+                    self.isLoading = false
+                    print("=== Finished Loading Conditions ===\n")
+                }
+
+                guard let results else {
+                    print("❌ Query failed to return data")
+                    self.errorMessage = "Failed to load conditions from database"
+                    self.conditionsData = []
+                    self.headers = []
+                    return
+                }
+
+                print("Raw query returned \(results.count) results")
+
+                if results.isEmpty {
+                    print("WARNING: No conditions found in database")
+                    self.errorMessage = "No conditions found in database"
+                    self.conditionsData = []
+                    self.headers = []
+                    return
+                }
+
+                // Compute headers deterministically off returned keys
+                let computedHeaders = Array(results[0].keys).sorted()
+                self.headers = computedHeaders
+                print("Available headers: \(computedHeaders.joined(separator: ", "))")
+
+                // Map results to string rows
+                self.conditionsData = results.map { dict in
+                    computedHeaders.map { header in
                         if let value = dict[header] {
                             if let stringValue = value as? String {
                                 return stringValue
@@ -113,24 +154,25 @@ class CaseViewModel: ObservableObject {
                         return ""
                     }
                 }
-                
-                print("\nSuccessfully loaded \(conditionsData.count) rows")
-                
-                // Print first few conditions for verification
+
+                print("\nSuccessfully loaded \(self.conditionsData.count) rows")
                 print("\nFirst 5 conditions:")
-                for (index, row) in conditionsData.prefix(5).enumerated() {
-                    if let caseTypeIndex = headers.firstIndex(of: "CASE TYPE") {
+                for (index, row) in self.conditionsData.prefix(5).enumerated() {
+                    if let caseTypeIndex = self.headers.firstIndex(of: "CASE TYPE"), caseTypeIndex < row.count {
                         print("\(index + 1). \(row[caseTypeIndex])")
                     }
                 }
+                
+                // Persist a lightweight cache for faster warm-starts
+                let payload: [String: Any] = [
+                    "headers": self.headers,
+                    "rows": self.conditionsData
+                ]
+                UserDefaults.standard.set(payload, forKey: "CachedConditionsPayload")
+                UserDefaults.standard.synchronize()
+                print("Cached conditions to UserDefaults: \(self.conditionsData.count) rows")
             }
-        } else {
-            print("❌ Query failed to return data")
-            errorMessage = "Failed to load conditions from database"
         }
-        
-        isLoading = false
-        print("=== Finished Loading Conditions ===\n")
     }
 }
 
