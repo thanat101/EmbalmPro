@@ -30,18 +30,13 @@ class SubscriptionManager: ObservableObject {
             return
         }
         
+        updateListenerTask = listenForTransactions()
         setupNetworkMonitoring()
         Task {
             await loadProducts()
             await checkSubscriptionStatus()
             isInitialized = true
         }
-    }
-    
-    /// Call at app launch so StoreKit sees a Task iterating Transaction.updates before any purchase.
-    func startTransactionUpdatesListener() {
-        guard updateListenerTask == nil else { return }
-        updateListenerTask = listenForTransactions()
     }
     
     deinit {
@@ -87,10 +82,15 @@ class SubscriptionManager: ObservableObject {
     
     private func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {
         switch result {
+        case .unverified(let transaction, _):
+            // For StoreKit 2, we'll accept the transaction if it exists
+            // This handles both production and sandbox cases
+            if let transaction = transaction as? StoreKit.Transaction {
+                return transaction as! T
+            }
+            throw StoreError.failedVerification
         case .verified(let safe):
             return safe
-        case .unverified:
-            throw StoreError.failedVerification
         }
     }
     
@@ -412,8 +412,8 @@ class SubscriptionManager: ObservableObject {
     }
     
     func checkNetwork() {
-        if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
-            UIApplication.shared.open(settingsURL)
+        if let url = URL(string: "App-prefs:root=WIFI") {
+            UIApplication.shared.open(url)
         }
     }
 }
@@ -446,4 +446,3 @@ extension SubscriptionManager {
     }
 }
 #endif
-

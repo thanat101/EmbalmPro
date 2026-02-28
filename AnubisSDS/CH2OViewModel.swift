@@ -24,8 +24,8 @@ class CH2OViewModel: ObservableObject {
     @Published var fluidName: String = ""
     @Published var conditionName: String = ""
     
-    init(initialStrengthPercent: String = "", 
-         initialFluidIndex: String = "", 
+    init(initialStrengthPercent: String = "",
+         initialFluidIndex: String = "",
          initialFluidName: String = "",
          initialConditionName: String = "") {
         self.desiredStrength = initialStrengthPercent

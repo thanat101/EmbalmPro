@@ -98,4 +98,4 @@ extension View {
     func sectionHeaderStyle() -> some View {
         self.modifier(SectionHeaderStyle())
     }
-} 
+}

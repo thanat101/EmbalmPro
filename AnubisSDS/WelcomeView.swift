@@ -45,11 +45,11 @@ struct WelcomeView: View {
                             .font(.title2)
                             .fontWeight(.bold)
                         
-                        Text("1 week free, then $49.99/year")
-                            .font(.title2)
+                        Text("Start with a 7-day free trial")
+                            .font(.headline)
                             .foregroundColor(.blue)
                         
-                        Text("Subscription will automatically renew after 1 week, unless cancelled.")
+                        Text("Then $49.99/year for full access to all features")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                         
@@ -91,7 +91,7 @@ struct WelcomeView: View {
                                 }
                                 #endif
                             }) {
-                                Text(subscriptionManager.isSubscribed ? "Manage Subscription" : "Subscribe")
+                                Text(subscriptionManager.isSubscribed ? "Manage Subscription" : "Start Free Trial")
                                     .font(.headline)
                                     .foregroundColor(.white)
                                     .frame(maxWidth: .infinity)
@@ -490,4 +490,3 @@ struct SubscriptionManagementView: View {
 #Preview {
     WelcomeView(isPresented: .constant(true))
 }
-

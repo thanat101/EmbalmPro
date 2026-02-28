@@ -177,8 +177,8 @@ struct Fluid: Identifiable, Codable {
     
     var formattedIndex: String {
         if let index = index {
-            return index.truncatingRemainder(dividingBy: 1) == 0 ? 
-                String(format: "%.0f", index) : 
+            return index.truncatingRemainder(dividingBy: 1) == 0 ?
+                String(format: "%.0f", index) :
                 String(format: "%.1f", index)
         }
         return ""

@@ -45,7 +45,7 @@ struct AnubisSDSApp: App {
                 } else {
                     ContentView()
                         .fullScreenCover(isPresented: Binding(
-                            get: { 
+                            get: {
                                 if !subscriptionManager.isSubscribed {
                                     return true
                                 }
@@ -59,25 +59,24 @@ struct AnubisSDSApp: App {
                             }
                         )) {
                             NavigationStack {
-                            WelcomeView(isPresented: Binding(
-                                get: { 
-                                    if !subscriptionManager.isSubscribed {
-                                        return true
+                                WelcomeView(isPresented: Binding(
+                                    get: {
+                                        if !subscriptionManager.isSubscribed {
+                                            return true
+                                        }
+                                        return !hasShownWelcome && !dontShowWelcomeAgain
+                                    },
+                                    set: { newValue in
+                                        if !newValue {
+                                            hasShownWelcome = true
+                                        }
                                     }
-                                    return !hasShownWelcome && !dontShowWelcomeAgain
-                                },
-                                set: { newValue in
-                                    if !newValue {
-                                        hasShownWelcome = true
-                                    }
-                                }
-                            ))
+                                ))
                             }
                         }
                 }
             }
             .task {
-                subscriptionManager.startTransactionUpdatesListener()
                 await subscriptionManager.checkSubscriptionStatus()
                 isInitialized = true
             }
@@ -97,15 +96,6 @@ private struct RestartView: View {
 
 private struct InitializationView: View {
     var body: some View {
-        VStack(spacing: 16) {
-            ProgressView()
-                .scaleEffect(1.5)
-                .tint(.blue)
-            Text("Loading…")
-                .font(.headline)
-                .foregroundColor(.primary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.systemGroupedBackground))
+        EmptyView()
     }
 }
