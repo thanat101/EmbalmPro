@@ -15,14 +15,14 @@ struct ContentView: View {
                             Text("Fluids Database")
                                 .font(AppStyle.Typography.headline)
                                 .foregroundColor(AppStyle.textColor)
-                        }
+            }
                     }
             }
-            .tabItem {
-                Label("Fluids", systemImage: "flask.fill")
-            }
-            .tag(0)
-            
+                    .tabItem {
+                        Label("Fluids", systemImage: "flask.fill")
+                    }
+                    .tag(0)
+                
             NavigationStack {
                 CaseView()
                     .navigationBarTitleDisplayMode(.inline)
@@ -34,11 +34,11 @@ struct ContentView: View {
                         }
                     }
             }
-            .tabItem {
-                Label("Case Analysis", systemImage: "figure")
-            }
-            .tag(1)
-            
+                    .tabItem {
+                        Label("Case Analysis", systemImage: "figure")
+                    }
+                    .tag(1)
+                
             NavigationStack {
                 CH2OView()
                     .navigationBarTitleDisplayMode(.inline)
@@ -50,11 +50,11 @@ struct ContentView: View {
                         }
                     }
             }
-            .tabItem {
-                Label("CH₂O", systemImage: "function")
-            }
-            .tag(2)
-            
+                    .tabItem {
+                        Label("CH₂O", systemImage: "function")
+                    }
+                    .tag(2)
+                
             NavigationStack {
                 SDSView()
                     .navigationBarTitleDisplayMode(.inline)
@@ -66,11 +66,11 @@ struct ContentView: View {
                         }
                     }
             }
-            .tabItem {
-                Label("SDS", systemImage: "doc.text")
-            }
-            .tag(3)
-            
+                    .tabItem {
+                        Label("SDS", systemImage: "doc.text")
+                    }
+                    .tag(3)
+                
             NavigationStack {
                 FavoritesView()
                     .navigationBarTitleDisplayMode(.inline)
@@ -82,14 +82,14 @@ struct ContentView: View {
                         }
                     }
             }
-            .tabItem {
-                Label("Favorites", systemImage: "star.fill")
-            }
-            .tag(4)
+                    .tabItem {
+                        Label("Favorites", systemImage: "star.fill")
+                    }
+                    .tag(4)
         }
-        .id(selectedTab)
-        .onChange(of: selectedTab) { _ in
-            NotificationCenter.default.post(name: NSNotification.Name("ResetNavigation"), object: nil)
+                    .id(selectedTab)
+            .onChange(of: selectedTab) { _ in
+                NotificationCenter.default.post(name: NSNotification.Name("ResetNavigation"), object: nil)
         }
     }
 }

@@ -278,7 +278,8 @@ class DatabaseManager {
         var updateValues: [Any] = []
         
         for (field, value) in updates {
-            updateFields.append("\(field) = ?")
+            // Quote column names so reserved words (e.g. INDEX) are valid in SQLite
+            updateFields.append("\"\(field)\" = ?")
             updateValues.append(value)
         }
         
@@ -390,7 +391,7 @@ class DatabaseManager {
         
         let query = """
             SELECT * FROM FLUID 
-            ORDER BY FLUID ASC
+            ORDER BY TYPE DESC, FLUID ASC
         """
         
         print("\n=== Executing Query ===")

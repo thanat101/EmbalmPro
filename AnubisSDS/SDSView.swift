@@ -162,5 +162,3 @@ struct SDSView: View {
     SDSView()
         .preferredColorScheme(.dark)
 }
-
-

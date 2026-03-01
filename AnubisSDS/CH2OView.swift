@@ -1,18 +1,63 @@
 import SwiftUI
 import AudioToolbox
+import UIKit
+
+// Minimal UIKit text field for calculator inputs to avoid SwiftUI UITextInteraction / TapAndAHalfRecognizer lag on device
+private struct CH2ODecimalField: UIViewRepresentable {
+    let placeholder: String
+    @Binding var text: String
+    var onEditingChanged: (() -> Void)?
+
+    func makeUIView(context: Context) -> UITextField {
+        let tf = UITextField()
+        tf.placeholder = placeholder
+        tf.text = text
+        tf.keyboardType = .decimalPad
+        tf.delegate = context.coordinator
+        tf.font = .preferredFont(forTextStyle: .body)
+        tf.borderStyle = .none
+        tf.backgroundColor = .systemGray6
+        tf.textColor = .label
+        tf.layer.cornerRadius = 8
+        tf.layer.masksToBounds = true
+        tf.translatesAutoresizingMaskIntoConstraints = false
+        let padding = UIView(frame: CGRect(x: 0, y: 0, width: 8, height: 1))
+        tf.leftView = padding
+        tf.rightView = UIView(frame: CGRect(x: 0, y: 0, width: 8, height: 1))
+        tf.leftViewMode = .always
+        tf.rightViewMode = .always
+        return tf
+    }
+
+    func updateUIView(_ uiView: UITextField, context: Context) {
+        uiView.placeholder = placeholder
+        if uiView.text != text { uiView.text = text }
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator(self) }
+
+    class Coordinator: NSObject, UITextFieldDelegate {
+        let parent: CH2ODecimalField
+        init(_ parent: CH2ODecimalField) { self.parent = parent }
+        func textFieldDidChangeSelection(_ textField: UITextField) {
+            parent.text = textField.text ?? ""
+            parent.onEditingChanged?()
+        }
+    }
+}
 
 struct CH2OView: View {
     @StateObject private var viewModel: CH2OViewModel
     @FocusState private var focusedField: Field?
-    @State private var isKeyboardVisible = false
     @State private var shouldResetNavigation = false
-    
+
     enum Field: Hashable {
+        case weight
         case strength
         case volume
         case index
     }
-    
+
     private func playFeedback() {
         DispatchQueue.main.async {
             let generator = UIImpactFeedbackGenerator(style: .medium)
@@ -21,7 +66,7 @@ struct CH2OView: View {
             AudioServicesPlaySystemSound(1104)
         }
     }
-    
+
     // Simplify the initializers by delegating to the view model
     init() {
         _viewModel = StateObject(wrappedValue: CH2OViewModel())
@@ -57,118 +102,78 @@ struct CH2OView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-                // Body Info Section
-                BodyInfoSection(viewModel: viewModel)
-                
-                // Calculator Input Section
+                BodyInfoSection(viewModel: viewModel, focusedField: $focusedField)
+
                 VStack(alignment: .leading, spacing: AppStyle.Spacing.medium) {
                     Text("Calculate Required Fluid")
                         .font(AppStyle.Typography.headline)
                         .foregroundColor(AppStyle.textColor)
-                    
+
                     if !viewModel.conditionName.isEmpty {
                         Text("Case Type: \(viewModel.conditionName)")
                             .font(AppStyle.Typography.subheadline)
                             .foregroundColor(AppStyle.secondaryTextColor)
                             .padding(.bottom, 4)
                     }
-                    
+
                     if !viewModel.fluidName.isEmpty {
                         Text("Selected Fluid: \(viewModel.fluidName)")
                             .font(AppStyle.Typography.subheadline)
                             .foregroundColor(AppStyle.secondaryTextColor)
                             .padding(.bottom, 8)
                     }
-                    
-                    // Place all three inputs in one horizontal row
+
                     HStack(spacing: AppStyle.Spacing.medium) {
-                        // Strength input
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Strength (%)")
                                 .font(AppStyle.Typography.caption)
                                 .foregroundColor(AppStyle.secondaryTextColor)
-                            
-                            TextField("2%", text: $viewModel.desiredStrength)
-                                .keyboardType(.decimalPad)
-                                .padding(8)
-                                .frame(height: 40)
-                                .background(Color(.systemGray6))
-                                .cornerRadius(AppStyle.CornerRadius.small)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: AppStyle.CornerRadius.small)
-                                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                                )
-                                .onChange(of: viewModel.desiredStrength) { newValue in
-                                    viewModel.calculationPerformed = false
-                                }
-                                .focused($focusedField, equals: .strength)
+                            CH2ODecimalField(placeholder: "2%", text: $viewModel.desiredStrength) {
+                                viewModel.calculationPerformed = false
+                            }
+                            .frame(height: 40)
                         }
                         .frame(maxWidth: .infinity)
-                        
-                        // Volume input
+
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Volume (oz)")
                                 .font(AppStyle.Typography.caption)
                                 .foregroundColor(AppStyle.secondaryTextColor)
-                            
-                            TextField("128", text: $viewModel.totalVolume)
-                                .keyboardType(.decimalPad)
-                                .padding(8)
-                                .frame(height: 40)
-                                .background(Color(.systemGray6))
-                                .cornerRadius(AppStyle.CornerRadius.small)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: AppStyle.CornerRadius.small)
-                                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                            CH2ODecimalField(
+                                placeholder: "128",
+                                text: Binding(
+                                    get: { viewModel.totalVolume },
+                                    set: { viewModel.totalVolume = $0.isEmpty ? "128" : $0; viewModel.calculationPerformed = false }
                                 )
-                                .onChange(of: viewModel.totalVolume) { newValue in
-                                    viewModel.calculationPerformed = false
-                                    // If the field is cleared, restore the default value
-                                    if newValue.isEmpty {
-                                        viewModel.totalVolume = "128"
-                                    }
-                                }
-                                .focused($focusedField, equals: .volume)
+                            )
+                            .frame(height: 40)
                         }
                         .frame(maxWidth: .infinity)
-                        
-                        // Fluid index input
+
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Index")
                                 .font(AppStyle.Typography.caption)
                                 .foregroundColor(AppStyle.secondaryTextColor)
-                            
-                            TextField("25", text: $viewModel.fluidIndex)
-                                .keyboardType(.decimalPad)
-                                .padding(8)
-                                .frame(height: 40)
-                                .background(Color(.systemGray6))
-                                .cornerRadius(AppStyle.CornerRadius.small)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: AppStyle.CornerRadius.small)
-                                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                                )
-                                .onChange(of: viewModel.fluidIndex) { newValue in
-                                    viewModel.calculationPerformed = false
-                                }
-                                .focused($focusedField, equals: .index)
+                            CH2ODecimalField(placeholder: "25", text: $viewModel.fluidIndex) {
+                                viewModel.calculationPerformed = false
+                            }
+                            .frame(height: 40)
                         }
                         .frame(maxWidth: .infinity)
                     }
-                    
+
                     if viewModel.showError {
                         Text(viewModel.errorMessage)
                             .font(AppStyle.Typography.caption)
                             .foregroundColor(.red)
                             .padding(.top, 4)
                     }
-                    
+
                     Button(action: {
                         playFeedback()
                         DispatchQueue.main.async {
                             viewModel.calculateAll()
                             focusedField = nil
-                            // Dismiss keyboard using UIKit
                             UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
                         }
                     }) {
@@ -185,42 +190,21 @@ struct CH2OView: View {
                     .buttonStyle(PressableButtonStyle())
                     .padding(.top, AppStyle.Spacing.small)
                 }
-                .padding()
+                .padding(.vertical, 8)
                 .cardStyle()
-                
-                // Results Section (only show when calculation is performed)
+
                 if viewModel.calculationPerformed {
                     ResultsSection(viewModel: viewModel)
-                    
-                    // New Formaldehyde Calculations Section
                     FormaldehydeCalculationsSection(viewModel: viewModel)
                 }
-                
-                // Footnotes Section
+
                 FootnotesSection()
             }
-            .simultaneousGesture(
-                DragGesture(minimumDistance: 5)
-                    .onChanged { _ in
-                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-                    }
-            )
-            .onTapGesture {
-                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-            }
-            .onAppear {
-                // Initialize weight on appear
-                viewModel.bodyWeight = String(format: "%.0f", viewModel.sliderValue)
-            }
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Text("CH₂O Calculator")
-                        .font(AppStyle.Typography.headline)
-                        .foregroundColor(AppStyle.textColor)
-                }
-            }
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationBarBackButtonHidden(false)
+            .padding()
+        }
+        .scrollDismissesKeyboard(.interactively)
+        .onAppear {
+            viewModel.bodyWeight = String(format: "%.0f", viewModel.sliderValue)
         }
         .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("ResetNavigation"))) { _ in
             shouldResetNavigation = true
@@ -234,7 +218,8 @@ struct CH2OView: View {
 // Body Info Section Component
 struct BodyInfoSection: View {
     @ObservedObject var viewModel: CH2OViewModel
-    
+    var focusedField: FocusState<CH2OView.Field?>.Binding
+
     var body: some View {
         VStack(alignment: .leading, spacing: AppStyle.Spacing.small) {
             HStack {
@@ -273,14 +258,20 @@ struct BodyInfoSection: View {
                 
                 TextField("Enter weight", value: $viewModel.sliderValue, format: .number)
                     .keyboardType(.numberPad)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .frame(width: 80)
+                    .multilineTextAlignment(.trailing)
+                    .padding(8)
+                    .frame(minWidth: 60, maxWidth: 90, idealHeight: 40)
                     .background(Color(.systemGray6))
-                    .cornerRadius(8)
+                    .cornerRadius(AppStyle.CornerRadius.small)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: AppStyle.CornerRadius.small)
+                            .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                    )
                     .onChange(of: viewModel.sliderValue) { newValue in
                         viewModel.bodyWeight = String(format: "%.0f", newValue)
                         viewModel.calculateTotalSolution()
                     }
+                    .focused(focusedField, equals: CH2OView.Field.weight)
                 
                 Text(viewModel.weightUnit == "lb" ? "lbs" : "kg")
                     .font(AppStyle.Typography.subheadline)

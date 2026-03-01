@@ -7,8 +7,17 @@ class FluidsViewModel: ObservableObject {
     @Published var rows: [[String]] = []
     @Published var headers: [String] = []
     @Published var searchText: String = ""
+    @Published var selectedManufacturer: String = "All"
+    @Published var selectedType: String = "All"
+    @Published var selectedUse: String = "All"
     @Published var isLoading: Bool = false
     @Published var error: String?
+    
+    // Cached filter results - updated only when fluids or filters change, not on every body evaluation
+    @Published var filteredFluids: [Fluid] = []
+    @Published var manufacturers: [String] = ["All"]
+    @Published var types: [String] = ["All"]
+    @Published var uses: [String] = ["All"]
     
     func loadData(forceRefresh: Bool = false) {
         print("\n=== Loading Fluids ===")
@@ -29,6 +38,7 @@ class FluidsViewModel: ObservableObject {
             fluids = cached.fluids
             headers = cached.headers
             rows = cached.rows
+            updateFilteredData()
             isLoading = false
             print("✅ Finished Loading Fluids (from cache)")
             print("=== Cache Load Complete ===\n")
@@ -44,6 +54,7 @@ class FluidsViewModel: ObservableObject {
             fluids = cached.fluids
             headers = cached.headers
             rows = cached.rows
+            updateFilteredData()
         } else {
             print("❌ Failed to load fluids from database")
             error = "Failed to load fluids from database"
@@ -59,43 +70,20 @@ class FluidsViewModel: ObservableObject {
         }
         return nil
     }
-}
-
-// MARK: - Main Fluids View
-struct FluidsView: View {
-    @StateObject private var viewModel = FluidsViewModel()
-    @State private var searchText = ""
-    @State private var showFilters = false
-    @State private var selectedManufacturer = "All"
-    @State private var selectedType = "All"
-    @State private var selectedUse = "All"
-    @State private var showError = false
-    @State private var errorMessage = ""
-    @State private var shouldResetNavigation = false
-    @State private var showWelcomeView = false
     
-    // Define which fields to search in
-    private let searchableFields = ["FLUID", "MANUFACTURER", "USE", "INDEX", "COLOR", "TYPE"]
-    
-    var filteredFluids: [Fluid] {
-        var filtered = viewModel.fluids
-        
-        // Apply manufacturer filter
+    /// Updates cached filter results. Call when fluids or filter state changes.
+    /// Keeps expensive filtering off the main thread during layout/focus changes.
+    func updateFilteredData() {
+        var filtered = fluids
         if selectedManufacturer != "All" {
             filtered = filtered.filter { $0.manufacturer.lowercased() == selectedManufacturer.lowercased() }
         }
-        
-        // Apply type filter
         if selectedType != "All" {
             filtered = filtered.filter { $0.type?.lowercased() == selectedType.lowercased() }
         }
-        
-        // Apply use filter
         if selectedUse != "All" {
             filtered = filtered.filter { $0.use?.lowercased() == selectedUse.lowercased() }
         }
-        
-        // Apply search filter
         if !searchText.isEmpty {
             let searchTextLower = searchText.lowercased()
             filtered = filtered.filter { fluid in
@@ -103,39 +91,38 @@ struct FluidsView: View {
                 return searchableText.contains(searchTextLower)
             }
         }
-        
-        return filtered
+        filteredFluids = filtered
+        manufacturers = ["All"] + Array(Set(fluids.map { $0.manufacturer })).sorted()
+        types = ["All"] + Array(Set(fluids.compactMap { $0.type })).sorted()
+        uses = ["All"] + Array(Set(fluids.compactMap { $0.use })).sorted()
     }
-    
-    var manufacturers: [String] {
-        ["All"] + Array(Set(viewModel.fluids.map { $0.manufacturer })).sorted()
-    }
-    
-    var types: [String] {
-        ["All"] + Array(Set(viewModel.fluids.compactMap { $0.type })).sorted()
-    }
-    
-    var uses: [String] {
-        ["All"] + Array(Set(viewModel.fluids.compactMap { $0.use })).sorted()
-    }
+}
+
+// MARK: - Main Fluids View
+struct FluidsView: View {
+    @StateObject private var viewModel = FluidsViewModel()
+    @State private var showFilters = false
+    @State private var showError = false
+    @State private var errorMessage = ""
+    @State private var shouldResetNavigation = false
+    @State private var showWelcomeView = false
     
     private func resetView() {
         // Clear all filters
-        selectedManufacturer = "All"
-        selectedType = "All"
-        selectedUse = "All"
-        // Clear search text
-        searchText = ""
+        viewModel.selectedManufacturer = "All"
+        viewModel.selectedType = "All"
+        viewModel.selectedUse = "All"
+        viewModel.searchText = ""
         // Force cache refresh and reload data
         print("Force reloading fluids cache for reset...")
         viewModel.loadData(forceRefresh: true)
     }
     
     var body: some View {
-        VStack(spacing: 0) {
+            VStack(spacing: 0) {
             // Header section - keep only About and reload buttons
-            VStack(spacing: AppStyle.Spacing.small) {
-                HStack {
+                VStack(spacing: AppStyle.Spacing.small) {
+                    HStack {
                     Spacer()
                     
                     // About button
@@ -154,48 +141,48 @@ struct FluidsView: View {
                             ))
                         }
                     }
-                    
-                    // Reload button
-                    Button(action: {
+                        
+                        // Reload button
+                        Button(action: {
                         print("Force reloading fluids data...")
-                        DatabaseManager.shared.updateFluidsCache(force: true)
-                        viewModel.loadData()
-                    }) {
-                        Image(systemName: "arrow.clockwise")
-                            .foregroundColor(AppStyle.accentColor)
+                            DatabaseManager.shared.updateFluidsCache(force: true)
+                            viewModel.loadData()
+                        }) {
+                            Image(systemName: "arrow.clockwise")
+                                .foregroundColor(AppStyle.accentColor)
+                        }
                     }
+                    .padding(.horizontal, AppStyle.Spacing.medium)
+                }
+                .padding(.top, AppStyle.Spacing.small)
+                
+                // Total count
+                HStack {
+                Text("Total Chemicals: \(viewModel.fluids.count)")
+                        .font(AppStyle.Typography.subheadline)
+                        .foregroundColor(AppStyle.secondaryTextColor)
+                    Spacer()
                 }
                 .padding(.horizontal, AppStyle.Spacing.medium)
-            }
-            .padding(.top, AppStyle.Spacing.small)
-            
-            // Total count
-            HStack {
-                Text("Total Chemicals: \(viewModel.fluids.count)")
-                    .font(AppStyle.Typography.subheadline)
-                    .foregroundColor(AppStyle.secondaryTextColor)
-                Spacer()
-            }
-            .padding(.horizontal, AppStyle.Spacing.medium)
-            .padding(.top, AppStyle.Spacing.small)
-            
-            // Search bar
-            SearchBar(text: $searchText, placeholder: "Search fluids...")
-                .padding(.horizontal)
-            
+                .padding(.top, AppStyle.Spacing.small)
+                
+                // Search bar
+                SearchBar(text: $viewModel.searchText, placeholder: "Search fluids...")
+                    .padding(.horizontal)
+                
             // Filter buttons with reset
             VStack(spacing: AppStyle.Spacing.small) {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: AppStyle.Spacing.small) {
-                        FilterButton(title: "Manufacturer", selection: $selectedManufacturer, options: manufacturers)
-                        FilterButton(title: "Type", selection: $selectedType, options: types)
-                        FilterButton(title: "Use", selection: $selectedUse, options: uses)
+                        FilterButton(title: "Manufacturer", selection: $viewModel.selectedManufacturer, options: viewModel.manufacturers)
+                        FilterButton(title: "Type", selection: $viewModel.selectedType, options: viewModel.types)
+                        FilterButton(title: "Use", selection: $viewModel.selectedUse, options: viewModel.uses)
                     }
                     .padding(.horizontal)
-                }
-                
+                            }
+                            
                 // Reset filters button
-                if selectedManufacturer != "All" || selectedType != "All" || selectedUse != "All" || !searchText.isEmpty {
+                if viewModel.selectedManufacturer != "All" || viewModel.selectedType != "All" || viewModel.selectedUse != "All" || !viewModel.searchText.isEmpty {
                     Button(action: resetView) {
                         HStack(spacing: 4) {
                             Image(systemName: "xmark.circle.fill")
@@ -203,24 +190,24 @@ struct FluidsView: View {
                         }
                         .font(AppStyle.Typography.subheadline)
                         .foregroundColor(AppStyle.primaryColor)
-                    }
+                        }
                     .padding(.horizontal)
                 }
-            }
-            .padding(.vertical, AppStyle.Spacing.small)
+                    }
+                    .padding(.vertical, AppStyle.Spacing.small)
             
             if viewModel.isLoading {
                 ProgressView()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if let error = viewModel.error {
                 Text(error)
-                    .font(AppStyle.Typography.body)
-                    .foregroundColor(.red)
-                    .padding(AppStyle.Spacing.medium)
-                    .cardStyle()
-                    .padding(.horizontal, AppStyle.Spacing.medium)
-                    .padding(.top, AppStyle.Spacing.small)
-            } else if filteredFluids.isEmpty {
+                        .font(AppStyle.Typography.body)
+                        .foregroundColor(.red)
+                        .padding(AppStyle.Spacing.medium)
+                        .cardStyle()
+                        .padding(.horizontal, AppStyle.Spacing.medium)
+                        .padding(.top, AppStyle.Spacing.small)
+            } else if viewModel.filteredFluids.isEmpty {
                 VStack(spacing: AppStyle.Spacing.medium) {
                     Image(systemName: "magnifyingglass")
                         .font(.system(size: 50))
@@ -236,50 +223,55 @@ struct FluidsView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(AppStyle.backgroundColor)
-            } else {
-                List(filteredFluids) { fluid in
-                    NavigationLink {
+                } else {
+                    List(viewModel.filteredFluids) { fluid in
+                        NavigationLink(value: fluid) {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(fluid.name)
+                                        .font(.headline)
+                                        .foregroundColor(.primary)
+                                    
+                                    Text(fluid.manufacturer)
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondary)
+                                    
+                                    if let use = fluid.use {
+                                        Text(use)
+                                            .font(.subheadline)
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
+                                .padding(.vertical, 4)
+                                
+                                Spacer()
+                            }
+                        }
+                    }
+                    .navigationDestination(for: Fluid.self) { fluid in
                         if let details = viewModel.getFluidDetails(for: fluid) {
                             FluidDetailView(row: details.row, headers: details.headers)
                         }
-                    } label: {
-                        HStack {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(fluid.name)
-                                    .font(.headline)
-                                    .foregroundColor(.primary)
-                                
-                                Text(fluid.manufacturer)
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                                
-                                if let use = fluid.use {
-                                    Text(use)
-                                        .font(.subheadline)
-                                        .foregroundColor(.secondary)
-                                }
-                            }
-                            .padding(.vertical, 4)
-                            
-                            Spacer()
-                        }
                     }
-                }
-                .listStyle(PlainListStyle())
+                    .listStyle(PlainListStyle())
                 .scrollDismissesKeyboard(.immediately)
             }
         }
-        .background(AppStyle.backgroundColor)
-        .background(
-            Color.clear
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-                }
-        )
+            .background(AppStyle.backgroundColor)
+            .background(
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                    }
+            )
         .onAppear {
             viewModel.loadData()
         }
+        .onChange(of: viewModel.searchText) { _ in viewModel.updateFilteredData() }
+        .onChange(of: viewModel.selectedManufacturer) { _ in viewModel.updateFilteredData() }
+        .onChange(of: viewModel.selectedType) { _ in viewModel.updateFilteredData() }
+        .onChange(of: viewModel.selectedUse) { _ in viewModel.updateFilteredData() }
         .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("ResetNavigation"))) { _ in
             shouldResetNavigation = true
         }
@@ -311,5 +303,4 @@ struct AboutView: View {
 
 #Preview {
     FluidsView()
-}
- 
+} 

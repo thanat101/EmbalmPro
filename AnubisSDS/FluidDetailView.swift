@@ -17,6 +17,48 @@ private struct FluidHeaderView: View {
     var editedValues: [String: String]
     var onValueChanged: (String, String) -> Void
     
+    private func getHazardSymbols() -> [String] {
+        var symbols: [String] = []
+        
+        // Check each hazard field
+        let ghs02 = getValue(for: "HAZARD_GHS02", in: row, headers: headers)
+        if ghs02 == "1" {
+            symbols.append("GHS02")
+        }
+        
+        let ghs05 = getValue(for: "HAZARD_GHS05", in: row, headers: headers)
+        if ghs05 == "1" {
+            symbols.append("GHS05")
+        }
+        
+        let ghs06 = getValue(for: "HAZARD_GHS06", in: row, headers: headers)
+        if ghs06 == "1" {
+            symbols.append("GHS06")
+        }
+        
+        let ghs07 = getValue(for: "HAZARD_GHS07", in: row, headers: headers)
+        if ghs07 == "1" {
+            symbols.append("GHS07")
+        }
+        
+        let ghs08 = getValue(for: "HAZARD_GHS08", in: row, headers: headers)
+        if ghs08 == "1" {
+            symbols.append("GHS08")
+        }
+        
+        let stot = getValue(for: "HAZARD_STOT", in: row, headers: headers)
+        if stot == "1" {
+            symbols.append("GHS08") // STOT uses GHS08
+        }
+        
+        let asp = getValue(for: "HAZARD_ASP", in: row, headers: headers)
+        if asp == "1" {
+            symbols.append("GHS08") // ASP uses GHS08
+        }
+        
+        return symbols
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: AppStyle.Spacing.large) {
             // Fluid Name Section
@@ -37,6 +79,15 @@ private struct FluidHeaderView: View {
                     Text(getValue(for: "FLUID", in: row, headers: headers))
                         .font(AppStyle.Typography.title)
                         .foregroundColor(AppStyle.textColor)
+                }
+                
+                // Hazard Symbols on their own line (same size as elsewhere)
+                if !getHazardSymbols().isEmpty {
+                    HStack(spacing: 6) {
+                        ForEach(getHazardSymbols(), id: \.self) { symbol in
+                            GHSPlacardImage(name: symbol)
+                        }
+                    }
                 }
             }
             
@@ -246,16 +297,7 @@ struct FluidDetailView: View {
         self.row = row
         self.headers = headers
         self.conditionStrength = conditionStrength
-        
-        // Initialize isFavorite state
-        let fluidName = getValue(for: "FLUID", in: row, headers: headers)
-        #if DEBUG
-        print("🔍 Initializing FluidDetailView for fluid: \(fluidName)")
-        #endif
-        
-        if !fluidName.isEmpty {
-            _isFavorite = State(initialValue: FavoritesManager.shared.isFavorite(fluidName: fluidName))
-        }
+        // isFavorite loaded in onAppear to keep init lightweight (avoids main-thread work during layout/focus)
     }
     
     private func tryLoadFluid() {
@@ -347,6 +389,11 @@ struct FluidDetailView: View {
             .padding(.vertical, AppStyle.Spacing.medium)
         }
         .background(Color(.systemGroupedBackground))
+        .onAppear {
+            if !fluidName.isEmpty {
+                isFavorite = FavoritesManager.shared.isFavorite(fluidName: fluidName)
+            }
+        }
         .navigationTitle("Fluid Details")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {

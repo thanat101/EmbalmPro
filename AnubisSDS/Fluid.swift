@@ -1,6 +1,6 @@
 import Foundation
 
-struct Fluid: Identifiable, Codable {
+struct Fluid: Identifiable, Codable, Hashable {
     let id: Int
     let name: String
     let manufacturer: String

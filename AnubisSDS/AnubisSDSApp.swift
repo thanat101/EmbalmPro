@@ -59,25 +59,28 @@ struct AnubisSDSApp: App {
                             }
                         )) {
                             NavigationStack {
-                                WelcomeView(isPresented: Binding(
-                                    get: {
-                                        if !subscriptionManager.isSubscribed {
-                                            return true
-                                        }
-                                        return !hasShownWelcome && !dontShowWelcomeAgain
-                                    },
-                                    set: { newValue in
-                                        if !newValue {
-                                            hasShownWelcome = true
-                                        }
+                            WelcomeView(isPresented: Binding(
+                                get: {
+                                    if !subscriptionManager.isSubscribed {
+                                        return true
                                     }
-                                ))
+                                    return !hasShownWelcome && !dontShowWelcomeAgain
+                                },
+                                set: { newValue in
+                                    if !newValue {
+                                        hasShownWelcome = true
+                                    }
+                                }
+                            ))
                             }
                         }
                 }
             }
             .task {
                 await subscriptionManager.checkSubscriptionStatus()
+                // Warm up framework/bundle resolution once at launch so it doesn't block on first text field tap
+                // (Time Profiler showed NSBundle allFrameworks + path resolution stalling the main thread during focus)
+                _ = Bundle.allFrameworks
                 isInitialized = true
             }
         }

@@ -165,10 +165,10 @@ struct CaseDetailView: View {
                                     // Direct calculation button
                                     NavigationLink {
                                         CH2OView(
-                                            initialStrengthPercent: strengthPercentValue,
-                                            initialFluidIndex: fluidIndex,
-                                            initialFluidName: fluidName,
-                                            initialConditionName: getValue(for: "CASE TYPE")
+                                        initialStrengthPercent: strengthPercentValue,
+                                        initialFluidIndex: fluidIndex,
+                                        initialFluidName: fluidName,
+                                        initialConditionName: getValue(for: "CASE TYPE")
                                         )
                                         .navigationBarTitleDisplayMode(.inline)
                                         .navigationTitle("CH₂O Calculator")
