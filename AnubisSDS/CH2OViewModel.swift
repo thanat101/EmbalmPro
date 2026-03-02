@@ -22,15 +22,18 @@ class CH2OViewModel: ObservableObject {
     
     // Helper data
     @Published var fluidName: String = ""
+    @Published var fluidManufacturer: String = ""
     @Published var conditionName: String = ""
     
     init(initialStrengthPercent: String = "",
          initialFluidIndex: String = "",
          initialFluidName: String = "",
+         initialFluidManufacturer: String = "",
          initialConditionName: String = "") {
         self.desiredStrength = initialStrengthPercent
         self.fluidIndex = initialFluidIndex
         self.fluidName = initialFluidName
+        self.fluidManufacturer = initialFluidManufacturer
         self.conditionName = initialConditionName
     }
     

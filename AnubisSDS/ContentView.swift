@@ -86,6 +86,22 @@ struct ContentView: View {
                         Label("Favorites", systemImage: "star.fill")
                     }
                     .tag(4)
+            
+            NavigationStack {
+                CaseLogView()
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .principal) {
+                            Text("Case Log")
+                                .font(AppStyle.Typography.headline)
+                                .foregroundColor(AppStyle.textColor)
+                        }
+                    }
+            }
+                    .tabItem {
+                        Label("Case Log", systemImage: "doc.text.fill")
+                    }
+                    .tag(5)
         }
                     .id(selectedTab)
             .onChange(of: selectedTab) { _ in

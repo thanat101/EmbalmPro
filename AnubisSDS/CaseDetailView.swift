@@ -150,10 +150,12 @@ struct CaseDetailView: View {
                         let strengthPercentValue = condition[safe: conditionStrengthPercentIndex]?.trimmingCharacters(in: .whitespaces) ?? ""
                         let fluidNameIndex = Self.cachedFluidsHeaders.firstIndex(of: "FLUID") ?? 0
                         let fluidIndexIndex = Self.cachedFluidsHeaders.firstIndex(of: "INDEX") ?? 0
+                        let fluidManufacturerIndex = Self.cachedFluidsHeaders.firstIndex(of: "MANUFACTURER") ?? 0
                         
                         ForEach(relatedFluids, id: \.fluid) { fluidData in
                             let fluidName = fluidData.fluid[safe: fluidNameIndex] ?? "Unknown Fluid"
                             let fluidIndex = fluidData.fluid[safe: fluidIndexIndex] ?? ""
+                            let fluidManufacturer = fluidData.fluid[safe: fluidManufacturerIndex]?.trimmingCharacters(in: .whitespaces) ?? ""
                             VStack(alignment: .leading, spacing: AppStyle.Spacing.small) {
                                 HStack {
                                     Text(fluidName)
@@ -168,6 +170,7 @@ struct CaseDetailView: View {
                                         initialStrengthPercent: strengthPercentValue,
                                         initialFluidIndex: fluidIndex,
                                         initialFluidName: fluidName,
+                                        initialFluidManufacturer: fluidManufacturer,
                                         initialConditionName: getValue(for: "CASE TYPE")
                                         )
                                         .navigationBarTitleDisplayMode(.inline)

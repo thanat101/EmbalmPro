@@ -50,6 +50,7 @@ struct CH2OView: View {
     @StateObject private var viewModel: CH2OViewModel
     @FocusState private var focusedField: Field?
     @State private var shouldResetNavigation = false
+    @State private var showCaseLogSheet = false
 
     enum Field: Hashable {
         case weight
@@ -91,11 +92,13 @@ struct CH2OView: View {
          initialStrengthPercent: String = "",
          initialFluidIndex: String = "",
          initialFluidName: String = "",
+         initialFluidManufacturer: String = "",
          initialConditionName: String = "") {
         _viewModel = StateObject(wrappedValue: CH2OViewModel(
             initialStrengthPercent: initialStrengthPercent,
             initialFluidIndex: initialFluidIndex,
             initialFluidName: initialFluidName,
+            initialFluidManufacturer: initialFluidManufacturer,
             initialConditionName: initialConditionName))
     }
     
@@ -203,6 +206,27 @@ struct CH2OView: View {
             .padding()
         }
         .scrollDismissesKeyboard(.interactively)
+        .toolbar {
+            if !viewModel.conditionName.isEmpty {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        showCaseLogSheet = true
+                    } label: {
+                        Label("Start Case Log", systemImage: "doc.badge.plus")
+                    }
+                }
+            }
+        }
+        .sheet(isPresented: $showCaseLogSheet) {
+            NavigationStack {
+                CaseLogDetailView(
+                    report: nil,
+                    prefill: caseLogPrefillFromViewModel
+                ) {
+                    showCaseLogSheet = false
+                }
+            }
+        }
         .onAppear {
             viewModel.bodyWeight = String(format: "%.0f", viewModel.sliderValue)
         }
@@ -210,6 +234,53 @@ struct CH2OView: View {
             shouldResetNavigation = true
         }
         .id(shouldResetNavigation)
+    }
+
+    /// Prefill for Case Log when opened from Case Analysis → Suggested Fluids → Fluid Needed.
+    /// Condition = case type (e.g. Alcoholism). Fluids used = manufacturer's fluid at X bottles, total Y gallons.
+    /// Notes = index, strength, oz/gal, method, weight, body type.
+    private var caseLogPrefillFromViewModel: CaseLogPrefill {
+        let bottleOz: Double = 11.6
+        // Fluids used: "DODGE CHROMATECH, 3.0 bottles, Total injected 3.2 gallons" (no 's on manufacturer)
+        var fluidsLine = ""
+        if !viewModel.fluidName.isEmpty {
+            let fluidLabel = viewModel.fluidManufacturer.isEmpty
+                ? viewModel.fluidName
+                : "\(viewModel.fluidManufacturer) \(viewModel.fluidName)"
+            if viewModel.calculationPerformed {
+                let standardGallons = viewModel.sliderValue / 50.0
+                let totalFluidOz = standardGallons * viewModel.fluidAmount
+                let bottles = totalFluidOz / bottleOz
+                fluidsLine = "\(fluidLabel) at \(String(format: "%.1f", bottles)) bottles, Total injected \(String(format: "%.1f", standardGallons)) gallons"
+            } else {
+                fluidsLine = fluidLabel
+            }
+        }
+        // Solution details (under Condition & fluids): Fluid Index, strength, oz per gallon, Standard Method, volume.
+        var solutionLines: [String] = []
+        if !viewModel.fluidIndex.isEmpty { solutionLines.append("Fluid Index \(viewModel.fluidIndex)") }
+        if !viewModel.desiredStrength.isEmpty { solutionLines.append("\(viewModel.desiredStrength)% strength") }
+        if viewModel.calculationPerformed && viewModel.fluidAmount > 0 {
+            solutionLines.append("\(String(format: "%.1f", viewModel.fluidAmount)) oz per gallon")
+            solutionLines.append("Standard Method")
+        }
+        if !viewModel.totalVolume.isEmpty {
+            solutionLines.append("Volume per gallon: \(viewModel.totalVolume) oz")
+        }
+        let solutionDetails = solutionLines.joined(separator: ". ")
+        let bodyType: String = switch viewModel.bodyPercentage {
+        case 15.0: "High BMI"
+        case 20.0: "All Muscle"
+        default: "Average"
+        }
+        return CaseLogPrefill(
+            conditionSummary: viewModel.conditionName,
+            arterialFluidUsed: fluidsLine.trimmingCharacters(in: .whitespaces),
+            solutionDetails: solutionDetails,
+            notes: "",
+            bodyWeight: "\(String(format: "%.0f", viewModel.sliderValue)) \(viewModel.weightUnit)",
+            bodyType: bodyType
+        )
     }
 }
 
