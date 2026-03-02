@@ -405,9 +405,21 @@ struct CaseDetailView: View {
             return (false, nil)
         }
         
+        // Apply persisted manufacturer filter from Fluids tab (if user selected one or more)
+        let fluidsToSearch: [[String]]
+        if let allowed = ManufacturerFilterStorage.allowedManufacturersForCaseAnalysis(), !allowed.isEmpty {
+            let manufacturerCol = Self.cachedFluidsHeaders.firstIndex(of: "MANUFACTURER") ?? 0
+            fluidsToSearch = Self.cachedFluidsData.filter { row in
+                let mfr = (row[safe: manufacturerCol] ?? "").trimmingCharacters(in: .whitespaces)
+                return allowed.contains(mfr)
+            }
+        } else {
+            fluidsToSearch = Self.cachedFluidsData
+        }
+        
         // Filter fluids more efficiently
         var manufacturerCounts: [String: Int] = [:]
-        relatedFluids = Self.cachedFluidsData.compactMap { fluid in
+        relatedFluids = fluidsToSearch.compactMap { fluid in
             guard fluid.count >= max(fluidIndexIndex, fluidFirmingSpeedIndex, fluidHumectantIndex, fluidTypeIndex, fluidUseIndex, fluidSecondUseIndex) else {
                 print("Warning: Fluid data row has insufficient columns")
                 return nil
