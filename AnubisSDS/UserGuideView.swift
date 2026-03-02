@@ -55,37 +55,43 @@ struct UserGuideView: View {
                         .font(AppStyle.Typography.headline)
                         .foregroundColor(AppStyle.primaryColor)
                         
-                        NavigationLink("7. SDS (Safety Data Sheets)") {
+                        NavigationLink("7. Case Log") {
+                            CaseLogSection()
+                        }
+                        .font(AppStyle.Typography.headline)
+                        .foregroundColor(AppStyle.primaryColor)
+                        
+                        NavigationLink("8. SDS (Safety Data Sheets)") {
                             SDSSectionGuideView()
                         }
                         .font(AppStyle.Typography.headline)
                         .foregroundColor(AppStyle.primaryColor)
                         
-                        NavigationLink("8. Favorites") {
+                        NavigationLink("9. Favorites") {
                             FavoritesSection()
                         }
                         .font(AppStyle.Typography.headline)
                         .foregroundColor(AppStyle.primaryColor)
                         
-                        NavigationLink("9. Tips and Tricks") {
+                        NavigationLink("10. Tips and Tricks") {
                             TipsAndTricksSection()
                         }
                         .font(AppStyle.Typography.headline)
                         .foregroundColor(AppStyle.primaryColor)
                         
-                        NavigationLink("10. Edit Feature") {
+                        NavigationLink("11. Edit Feature") {
                             EditFeatureSection()
                         }
                         .font(AppStyle.Typography.headline)
                         .foregroundColor(AppStyle.primaryColor)
                         
-                        NavigationLink("11. Database Reset") {
+                        NavigationLink("12. Database Reset") {
                             DatabaseResetSection()
                         }
                         .font(AppStyle.Typography.headline)
                         .foregroundColor(AppStyle.primaryColor)
                         
-                        NavigationLink("12. Symbols Guide") {
+                        NavigationLink("13. Symbols Guide") {
                             SymbolsSection()
                         }
                         .font(AppStyle.Typography.headline)
@@ -184,11 +190,12 @@ struct NavigationSection: View {
                         .foregroundColor(AppStyle.textColor)
                     
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("• Fluids List: Browse all available fluids")
-                        Text("• Case Analysis: View and manage condition strengths")
-                        Text("• CH2O Calculator: Access formaldehyde calculations")
-                        Text("• SDS: View Safety Data Sheets by section or the entire data sheet")
-                        Text("• Favorites: Quick access to your most frequently used fluids")
+                        Text("• Fluids: Browse and search all available fluids")
+                        Text("• Case Analysis: View condition strengths and suggested fluids")
+                        Text("• CH₂O Calculator: Formaldehyde and dilution calculations")
+                        Text("• SDS: Safety Data Sheets by section or full document")
+                        Text("• Favorites: Quick access to frequently used fluids")
+                        Text("• Case Log: Create and manage embalmer's reports")
                     }
                     .font(AppStyle.Typography.body)
                     .foregroundColor(AppStyle.textColor)
@@ -228,7 +235,7 @@ struct SearchAndFilterSection: View {
                         .font(AppStyle.Typography.title)
                         .foregroundColor(AppStyle.textColor)
                     
-                    Text("The search bar at the top of the Fluids List allows you to search across all fluid properties. You can search by:")
+                    Text("The search bar at the top of the Fluids list allows you to search across fluid properties. You can search by:")
                         .font(AppStyle.Typography.body)
                         .foregroundColor(AppStyle.textColor)
                     
@@ -237,7 +244,8 @@ struct SearchAndFilterSection: View {
                         Text("• Manufacturer")
                         Text("• Type")
                         Text("• Index number")
-                        Text("• Any other property in the database")
+                        Text("• Color")
+                        Text("• Use and other properties")
                     }
                     .font(AppStyle.Typography.body)
                     .foregroundColor(AppStyle.textColor)
@@ -249,22 +257,24 @@ struct SearchAndFilterSection: View {
                         .foregroundColor(AppStyle.textColor)
                         .padding(.top)
                     
-                    Text("Use the 'Filter by' button to access filtering options:")
+                    Text("Use the filter buttons to narrow results:")
                         .font(AppStyle.Typography.body)
                         .foregroundColor(AppStyle.textColor)
                     
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("1. Fluid Type Filter:")
+                        Text("1. Manufacturer Filter:")
+                        Text("   • Select one or more manufacturers (multi-select)")
+                        Text("   • Select 'All' to show fluids from all manufacturers")
+                        Text("   • Your selection persists when you switch tabs or leave the app—it stays until you change it")
+                        Text("   • Case Analysis suggested fluids respect this filter (only shows fluids from your selected manufacturer(s))")
+                        
+                        Text("2. Type Filter:")
                         Text("   • Filter by fluid type (e.g., Vascular, Cavity, Supplements)")
                         Text("   • Select 'All' to show all types")
                         
-                        Text("2. Manufacturer Filter:")
-                        Text("   • Filter fluids by specific manufacturers")
-                        Text("   • Select 'All' to show all manufacturers")
-                        
-                        Text("3. Fluid Use Filter:")
-                        Text("   • Filter fluids by a specific use (e.g., Arterial, Coinjection, High Index Fluids)")
-                        Text("   • Select 'All' to show all manufacturers")
+                        Text("3. Use Filter:")
+                        Text("   • Filter by use (e.g., Arterial, Coinjection, High Index Fluids)")
+                        Text("   • Select 'All' to show all uses")
                     }
                     .font(AppStyle.Typography.body)
                     .foregroundColor(AppStyle.textColor)
@@ -276,8 +286,8 @@ struct SearchAndFilterSection: View {
                     
                     VStack(alignment: .leading, spacing: 8) {
                         Text("• Filters can be used in combination with search")
-                        Text("• Use 'Clear Filters' to reset all filters")
-                        Text("• Filters persist until cleared or app restart")
+                        Text("• Use 'Reset Filters' to clear all filters")
+                        Text("• Manufacturer filter persists across navigation until you change it")
                     }
                     .font(AppStyle.Typography.body)
                     .foregroundColor(AppStyle.textColor)
@@ -377,12 +387,12 @@ struct CaseAnalysisSection: View {
                         .foregroundColor(AppStyle.textColor)
                     
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("• Search and filter through Case types")
+                        Text("• Search and filter through case types")
                         Text("• View detailed case analysis information")
+                        Text("• Suggested fluids are filtered by the manufacturer(s) you selected in the Fluids tab")
                         Text("• View and access 'Suggested Use Fluids' based on solution strength and fluid index")
-                        Text("• Calculate total solution requirements")
-                        Text("• View strength percentages")
-                        Text("• Manage condition-specific treatments")
+                        Text("• Tap a suggested fluid to go to the CH₂O Calculator with index and strength prefilled")
+                        Text("• From CH₂O, tap 'Start Case Log' to create an embalmer's report with the case prefilled")
                     }
                     .font(AppStyle.Typography.body)
                     .foregroundColor(AppStyle.textColor)
@@ -399,15 +409,17 @@ struct CaseAnalysisSection: View {
                         .foregroundColor(AppStyle.textColor)
                     
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("• Takes you directly to the formaldehyde calculator and pre-fills the index and solution strength for the selected embalming fluid")
+                        Text("• Takes you directly to the CH₂O Calculator with index and solution strength prefilled for the selected fluid")
+                        Text("• After entering weight and body type and tapping Calculate, use 'Start Case Log' to create a report with the case prefilled")
                         Text("• For each condition, the app suggests appropriate fluids based on:")
                         
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("• CH2O INDEX range matching")
+                            Text("• CH₂O INDEX range matching")
                             Text("• Firming speed compatibility")
                             Text("• Humectant properties")
                             Text("• Special treatment capabilities")
                             Text("• Manufacturer recommendations")
+                            Text("• Only fluids from your selected manufacturer(s) in the Fluids tab are shown")
                         }
                         .padding(.leading)
                     }
@@ -455,6 +467,17 @@ struct CH2OCalculatorSection: View {
                 }
                 
                 Group {
+                    Text("Start Case Log")
+                        .font(AppStyle.Typography.title)
+                        .foregroundColor(AppStyle.textColor)
+                        .padding(.top)
+                    
+                    Text("When you open the CH₂O Calculator from Case Analysis (after selecting a suggested fluid), a 'Start Case Log' button appears in the top right. Tap it to create a new embalmer's report with the case type, fluid, weight, body type, and solution details prefilled. This is the recommended way to document a case after running calculations.")
+                        .font(AppStyle.Typography.body)
+                        .foregroundColor(AppStyle.textColor)
+                }
+                
+                Group {
                     Text("Results Display")
                         .font(AppStyle.Typography.title)
                         .foregroundColor(AppStyle.textColor)
@@ -468,8 +491,8 @@ struct CH2OCalculatorSection: View {
                         Text("• Embalming fluid needed per gallon")
                         Text("• Total solution requirements")
                         Text("• Formaldehyde content per bottle")
-                        Text("• Industry standard calculations")
-                        Text("• Scientific approach calculations")
+                        Text("• Industry standard (STD) calculations")
+                        Text("• Scientific (SCI) approach calculations")
                         Text("• Step-by-step calculation breakdown")
                     }
                     .font(AppStyle.Typography.body)
@@ -479,6 +502,106 @@ struct CH2OCalculatorSection: View {
             .padding()
         }
         .navigationTitle("CH2O Calculator")
+    }
+}
+
+// MARK: - Case Log Section
+struct CaseLogSection: View {
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: AppStyle.Spacing.large) {
+                Group {
+                    Text("Case Log (Embalmer's Reports)")
+                        .font(AppStyle.Typography.title)
+                        .foregroundColor(AppStyle.textColor)
+                    
+                    Text("The Case Log lets you create and manage embalmer's reports for each case. Each report captures decedent information, facility and embalmer details, fluids used, closure and technique, and notes.")
+                        .font(AppStyle.Typography.body)
+                        .foregroundColor(AppStyle.textColor)
+                }
+                
+                Group {
+                    Text("Creating a New Case")
+                        .font(AppStyle.Typography.title)
+                        .foregroundColor(AppStyle.textColor)
+                        .padding(.top)
+                    
+                    Text("You can create a new case in two ways:")
+                        .font(AppStyle.Typography.body)
+                        .foregroundColor(AppStyle.textColor)
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("1. From the Case Log tab:")
+                        Text("   • Tap the Case Log tab in the navigation bar")
+                        Text("   • Tap the '+' button to add a new report")
+                        
+                        Text("2. From Case Analysis (recommended workflow):")
+                        Text("   • Go to Case Analysis and select a case type")
+                        Text("   • Tap a suggested fluid, then 'Fluid Needed'")
+                        Text("   • In the CH₂O Calculator, enter weight and body type, then tap 'Calculate'")
+                        Text("   • Tap 'Start Case Log' (doc.badge.plus icon) in the top right")
+                        Text("   • A new Case Log opens with the case type, fluid, weight, body type, and solution details prefilled")
+                    }
+                    .font(AppStyle.Typography.body)
+                    .foregroundColor(AppStyle.textColor)
+                }
+                
+                Group {
+                    Text("Case Number")
+                        .font(AppStyle.Typography.title)
+                        .foregroundColor(AppStyle.textColor)
+                        .padding(.top)
+                    
+                    Text("Each case has an editable Case Number. New cases automatically get the next number. You can change it if needed. The Case Number appears on printed and PDF reports.")
+                        .font(AppStyle.Typography.body)
+                        .foregroundColor(AppStyle.textColor)
+                }
+                
+                Group {
+                    Text("Report Sections")
+                        .font(AppStyle.Typography.title)
+                        .foregroundColor(AppStyle.textColor)
+                        .padding(.top)
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("• Decedent & death: Name, gender, age, race, date and place of death")
+                        Text("• Facility & embalmer: Facility name, embalmer, dates")
+                        Text("• Body & condition: Weight, body type, condition summary")
+                        Text("• Fluids & solution: Arterial fluid, co-injection, cavity chemical, solution details")
+                        Text("• Closure & technique: Mouth/eye closure, arteries, veins, drainage, aspiration")
+                        Text("• After embalming & notes: Condition after embalming, embalmer notes")
+                        Text("• Condition when received: Free-text description")
+                        Text("• Body outlines: Tap the front or back body image to add numbered marks for condition areas")
+                    }
+                    .font(AppStyle.Typography.body)
+                    .foregroundColor(AppStyle.textColor)
+                }
+                
+                Group {
+                    Text("Print and Save as PDF")
+                        .font(AppStyle.Typography.title)
+                        .foregroundColor(AppStyle.textColor)
+                        .padding(.top)
+                    
+                    Text("From the Case Log list, use the Print or Save as PDF buttons to generate reports. Each case produces a 2-page layout: Page 1 has the form with all sections; Page 2 has 'Condition when received' and body outlines (front and back) with any numbered marks. The decedent name and date of death appear at the top of page 2 so you can match pages when printing multiple cases.")
+                        .font(AppStyle.Typography.body)
+                        .foregroundColor(AppStyle.textColor)
+                }
+                
+                Group {
+                    Text("Deleting a Case")
+                        .font(AppStyle.Typography.title)
+                        .foregroundColor(AppStyle.textColor)
+                        .padding(.top)
+                    
+                    Text("Open a case and tap the delete (trash) button to remove it. This cannot be undone.")
+                        .font(AppStyle.Typography.body)
+                        .foregroundColor(AppStyle.textColor)
+                }
+            }
+            .padding()
+        }
+        .navigationTitle("Case Log")
     }
 }
 
@@ -953,6 +1076,11 @@ struct SymbolsSection: View {
                         IconRow(icon: "pencil", description: "Edit")
                         IconRow(icon: "chevron.right", description: "Navigate to next screen")
                         IconRow(icon: "xmark", description: "Close or dismiss")
+                        IconRow(icon: "doc.badge.plus", description: "Start Case Log (CH₂O Calculator when opened from Case Analysis)")
+                        IconRow(icon: "plus.circle.fill", description: "Add new case (Case Log tab)")
+                        IconRow(icon: "trash", description: "Delete case (Case Log detail)")
+                        IconRow(icon: "printer", description: "Print (Case Log)")
+                        IconRow(icon: "square.and.arrow.down", description: "Save as PDF (Case Log)")
                     }
                     .padding(.vertical, 8)
                 }
@@ -968,13 +1096,32 @@ struct SymbolsSection: View {
                         .foregroundColor(AppStyle.textColor)
                     
                     VStack(alignment: .leading, spacing: 12) {
-                        IconRow(icon: "flask", description: "Fluids")
+                        IconRow(icon: "flask.fill", description: "Fluids")
                         IconRow(icon: "figure", description: "Case Analysis")
                         IconRow(icon: "function", description: "CH₂O Calculator")
                         IconRow(icon: "doc.text", description: "SDS")
                         IconRow(icon: "star.fill", description: "Favorites")
+                        IconRow(icon: "doc.text.fill", description: "Case Log")
                     }
                     .padding(.vertical, 8)
+                }
+                
+                Group {
+                    Text("Case Log Icons")
+                        .font(AppStyle.Typography.title)
+                        .foregroundColor(AppStyle.textColor)
+                        .padding(.top)
+                    
+                    Text("How to add a case:")
+                        .font(AppStyle.Typography.headline)
+                        .foregroundColor(AppStyle.textColor)
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("• Via the Case Log tab: Tap the Case Log tab in the navigation bar, then tap the + (plus.circle.fill) button to create a new report")
+                        Text("• Via Case Analysis: Select a case type → tap a suggested fluid → CH₂O Calculator opens → enter weight and body type → tap Calculate → tap 'Start Case Log' (doc.badge.plus) in the top right")
+                    }
+                    .font(AppStyle.Typography.body)
+                    .foregroundColor(AppStyle.textColor)
                 }
             }
             .padding()

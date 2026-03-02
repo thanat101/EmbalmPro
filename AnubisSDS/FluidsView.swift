@@ -115,7 +115,7 @@ class FluidsViewModel: ObservableObject {
         if !searchText.isEmpty {
             let searchTextLower = searchText.lowercased()
             filtered = filtered.filter { fluid in
-                let searchableText = "\(fluid.name) \(fluid.manufacturer) \(fluid.use ?? "") \(fluid.type ?? "") \(fluid.formattedIndex)".lowercased()
+                let searchableText = "\(fluid.name) \(fluid.manufacturer) \(fluid.use ?? "") \(fluid.type ?? "") \(fluid.formattedIndex) \(fluid.color ?? "")".lowercased()
                 return searchableText.contains(searchTextLower)
             }
         }

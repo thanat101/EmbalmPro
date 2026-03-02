@@ -30,6 +30,7 @@ struct Fluid: Identifiable, Codable, Hashable {
     let index: Double?
     let use: String?
     let type: String?
+    let color: String?
     
     // Coding keys for database mapping
     private enum CodingKeys: String, CodingKey {
@@ -58,6 +59,7 @@ struct Fluid: Identifiable, Codable, Hashable {
         case index = "INDEX"
         case use = "USE"
         case type = "TYPE"
+        case color = "COLOR"
     }
     
     init?(from dictionary: [String: Any]) {
@@ -104,6 +106,7 @@ struct Fluid: Identifiable, Codable, Hashable {
         }
         self.use = dictionary["USE"] as? String
         self.type = dictionary["TYPE"] as? String
+        self.color = dictionary["COLOR"] as? String
     }
     
     // Custom init from decoder for Codable conformance
@@ -139,6 +142,7 @@ struct Fluid: Identifiable, Codable, Hashable {
         self.index = try container.decodeIfPresent(Double.self, forKey: .index)
         self.use = try container.decodeIfPresent(String.self, forKey: .use)
         self.type = try container.decodeIfPresent(String.self, forKey: .type)
+        self.color = try container.decodeIfPresent(String.self, forKey: .color)
     }
     
     // Custom encode method for Codable conformance
@@ -173,6 +177,7 @@ struct Fluid: Identifiable, Codable, Hashable {
         try container.encodeIfPresent(index, forKey: .index)
         try container.encodeIfPresent(use, forKey: .use)
         try container.encodeIfPresent(type, forKey: .type)
+        try container.encodeIfPresent(color, forKey: .color)
     }
     
     var formattedIndex: String {
