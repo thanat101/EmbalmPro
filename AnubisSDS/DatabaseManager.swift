@@ -246,6 +246,60 @@ class DatabaseManager {
         return true
     }
     
+    /// Resets only reference tables (FLUID, CONDITIONS, GHS) from the bundle. Case Log is preserved.
+    func resetReferenceDataOnly() -> Bool {
+        guard let db = db else {
+            print("❌ No database connection")
+            return false
+        }
+        guard let bundlePath = Bundle.main.path(forResource: "data", ofType: "db") else {
+            print("❌ Could not find database in bundle")
+            return false
+        }
+        let pathEscaped = bundlePath.replacingOccurrences(of: "'", with: "''")
+        let attachSQL = "ATTACH DATABASE '\(pathEscaped)' AS bundle"
+        
+        print("\n=== Resetting reference data only (Case Log preserved) ===")
+        
+        if sqlite3_exec(db, "PRAGMA foreign_keys = OFF;", nil, nil, nil) != SQLITE_OK {
+            print("⚠️ Could not disable foreign keys")
+        }
+        if sqlite3_exec(db, attachSQL, nil, nil, nil) != SQLITE_OK {
+            if let err = sqlite3_errmsg(db) { print("❌ ATTACH failed: \(String(cString: err))") }
+            sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nil, nil, nil)
+            return false
+        }
+        defer {
+            sqlite3_exec(db, "DETACH DATABASE bundle;", nil, nil, nil)
+            sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nil, nil, nil)
+        }
+        
+        let tables = ["FLUID", "CONDITIONS", "GHS"]
+        for table in tables {
+            if sqlite3_exec(db, "DELETE FROM main.\(table);", nil, nil, nil) != SQLITE_OK {
+                if let err = sqlite3_errmsg(db) { print("❌ DELETE FROM \(table): \(String(cString: err))") }
+                return false
+            }
+            if sqlite3_exec(db, "INSERT INTO main.\(table) SELECT * FROM bundle.\(table);", nil, nil, nil) != SQLITE_OK {
+                if let err = sqlite3_errmsg(db) { print("❌ INSERT INTO \(table): \(String(cString: err))") }
+                return false
+            }
+            print("✅ Reset \(table)")
+        }
+        
+        if let cacheURL = cacheURL, FileManager.default.fileExists(atPath: cacheURL.path) {
+            try? FileManager.default.removeItem(at: cacheURL)
+            print("✅ Cleared fluids cache")
+        }
+        DatabaseManager.cachedFluids = nil
+        DatabaseManager.cachedFluidsHeaders = []
+        DatabaseManager.cachedFluidsRows = []
+
+        
+        print("✅ Reference data reset complete - Case Log unchanged\n")
+        return true
+    }
+    
     deinit {
         if sqlite3_close(db) == SQLITE_OK {
             print("Database connection closed")

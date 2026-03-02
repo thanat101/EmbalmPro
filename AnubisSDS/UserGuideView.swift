@@ -905,12 +905,11 @@ struct DatabaseResetSection: View {
                     
                     VStack(alignment: .leading, spacing: 8) {
                         Text("• Access through Settings in User Guide")
-                        Text("• Completely resets ALL database tables to original state")
-                        Text("• Affects both Fluids and Conditions tables")
-                        Text("• Removes all edits and changes to any table")
-                        Text("• Gets fresh copy of entire database from app bundle")
+                        Text("• Resets Fluids and Conditions (and GHS reference data) to original state")
+                        Text("• Case Log is preserved — your embalmer's reports are not affected")
+                        Text("• Removes edits to fluid and condition reference data only")
                         Text("• Requires multiple confirmations")
-                        Text("• Cannot be undone")
+                        Text("• Cannot be undone for reference data")
                     }
                     .font(AppStyle.Typography.body)
                     .foregroundColor(AppStyle.textColor)
@@ -926,7 +925,7 @@ struct DatabaseResetSection: View {
                         Text("   • Tap 'Reset Database'")
                         Text("   • Confirm the warnings")
                         Text("   • Wait for reset to complete")
-                        Text("   • All tables (Fluids, Conditions, etc.) will be reset")
+                        Text("   • Fluids and Conditions will be reset; Case Log is kept")
                         Text("   • Return to Fluids tab")
                         Text("   • Tap circular reset button to refresh view")
                         
@@ -948,11 +947,10 @@ struct DatabaseResetSection: View {
                         .padding(.top)
                     
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("• Database reset is permanent")
-                        Text("• All edits will be lost")
-                        Text("• Cannot be undone")
+                        Text("• Reference data reset is permanent for Fluids/Conditions")
+                        Text("• Case Log is never modified by reset")
                         Text("• Always use circular reset for normal updates")
-                        Text("• Only use database reset when necessary")
+                        Text("• Only use database reset when you need original reference data")
                     }
                     .font(AppStyle.Typography.body)
                     .foregroundColor(AppStyle.textColor)

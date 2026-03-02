@@ -25,7 +25,7 @@ struct SettingsView: View {
                         .font(AppStyle.Typography.headline)
                         .foregroundColor(AppStyle.textColor)
                     
-                    Text("This will reset the database to its original state. All edits and changes will be permanently lost.")
+                    Text("Resets Fluids and Conditions to the original reference data. Your Case Log entries are not affected.")
                         .font(AppStyle.Typography.body)
                         .foregroundColor(AppStyle.textColor)
                         .padding(.bottom, 5)
@@ -53,22 +53,22 @@ struct SettingsView: View {
                 showFinalConfirmation = true
             }
         } message: {
-            Text("This will reset the database to its original state. All your edits and changes will be permanently lost. This action cannot be undone.")
+            Text("Fluids and Conditions will be restored to the original reference data. Your Case Log will be kept. Edits to fluid/condition data cannot be undone.")
         }
         .alert("⚠️ Final Confirmation", isPresented: $showFinalConfirmation) {
             Button("Cancel", role: .cancel) { }
-            Button("Reset Database", role: .destructive) {
+            Button("Reset Reference Data", role: .destructive) {
                 performReset()
             }
         } message: {
-            Text("Are you absolutely sure you want to reset the database? This will permanently delete all your edits and changes.")
+            Text("Reset Fluids and Conditions to original? Case Log will not be changed.")
         }
         .alert("✅ Reset Complete", isPresented: $resetSuccess) {
             Button("OK") {
                 dismiss()
             }
         } message: {
-            Text("The database has been successfully reset to its original state.")
+            Text("Reference data has been reset. Use the refresh button on the Fluids tab to see changes. Case Log was not modified.")
         }
         .alert("❌ Reset Failed", isPresented: $resetError) {
             Button("OK", role: .cancel) { }
@@ -78,7 +78,7 @@ struct SettingsView: View {
     }
     
     private func performReset() {
-        if DatabaseManager.shared.resetDatabase() {
+        if DatabaseManager.shared.resetReferenceDataOnly() {
             resetSuccess = true
         } else {
             resetError = true

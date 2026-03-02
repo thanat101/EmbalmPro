@@ -184,6 +184,8 @@ struct WelcomeView: View {
                         
                         FeatureRow(icon: "figure", title: "Case Analysis Tab", description: "View case types with suggested solution strengths, fluid indexes, and recommended products.")
                         
+                        FeatureRow(icon: "list.clipboard", title: "Case Log", description: "Create and manage embalmer's reports with case numbers, body outlines, and printable PDF documentation.")
+                        
                         FeatureRow(icon: "function", title: "CH₂O Calculator", description: "Calculate fluid amounts and dilution ratios based on fluid index or body weight using standard or protein-based approaches.")
                         
                         FeatureRow(icon: "doc.text", title: "SDS Tab", description: "Access Safety Data Sheets with searchable sections for included embalming fluids.")
