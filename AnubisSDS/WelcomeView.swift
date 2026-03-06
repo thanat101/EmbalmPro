@@ -103,6 +103,7 @@ struct WelcomeView: View {
                             .sheet(isPresented: $showSubscriptionManagement) {
                                 if #available(iOS 16.0, *) {
                                     SubscriptionManagementView()
+                                        .id("SubscriptionManagement")
                                 }
                             }
                             
@@ -457,8 +458,11 @@ struct SubscriptionManagementView: View {
                 }
             }
             .task {
+                // Delay so sheet is fully presented before StoreKit call (avoids TestFlight/sandbox dismissing sheet)
+                try? await Task.sleep(nanoseconds: 400_000_000) // 0.4 sec
                 await loadSubscriptionStatus()
             }
+            .interactiveDismissDisabled(true)
         }
     }
     

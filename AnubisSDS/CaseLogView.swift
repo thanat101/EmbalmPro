@@ -35,6 +35,8 @@ struct CaseLogView: View {
                 listContent
             }
         }
+        .navigationTitle("Case Log")
+        .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(for: CaseLogReport.self) { report in
             CaseLogDetailView(report: report) {
                 viewModel.loadReports()
@@ -57,21 +59,18 @@ struct CaseLogView: View {
                 }
             }
             ToolbarItem(placement: .secondaryAction) {
-                Menu {
-                    Button {
-                        CaseLogPrintPDF.print(reports: viewModel.reports)
-                    } label: {
-                        Label("Print", systemImage: "printer")
-                    }
-                    .disabled(viewModel.reports.isEmpty)
-                    Button {
-                        CaseLogPrintPDF.saveAsPDF(reports: viewModel.reports)
-                    } label: {
-                        Label("Save as PDF", systemImage: "square.and.arrow.down")
-                    }
-                    .disabled(viewModel.reports.isEmpty)
+                Button {
+                    CaseLogPrintPDF.print(reports: viewModel.reports)
                 } label: {
-                    Image(systemName: "square.and.arrow.down")
+                    Label("Print", systemImage: "printer")
+                }
+                .disabled(viewModel.reports.isEmpty)
+            }
+            ToolbarItem(placement: .secondaryAction) {
+                Button {
+                    CaseLogPrintPDF.saveAsPDF(reports: viewModel.reports)
+                } label: {
+                    Label("Save as PDF", systemImage: "square.and.arrow.down")
                 }
                 .disabled(viewModel.reports.isEmpty)
             }
@@ -79,6 +78,13 @@ struct CaseLogView: View {
         .onAppear {
             viewModel.loadReports()
         }
+    }
+
+    private func dateAndPlaceLine(for report: CaseLogReport) -> String {
+        let date = report.listSubtitle
+        let place = report.placeOfDeath.trimmingCharacters(in: .whitespacesAndNewlines)
+        if place.isEmpty { return date }
+        return "\(date) · \(place)"
     }
 
     private var emptyState: some View {
@@ -103,12 +109,26 @@ struct CaseLogView: View {
             ForEach(viewModel.reports) { report in
                 NavigationLink(value: report) {
                     VStack(alignment: .leading, spacing: AppStyle.Spacing.small) {
-                        Text(report.listTitle)
-                            .font(AppStyle.Typography.headline)
-                            .foregroundColor(AppStyle.textColor)
-                        Text(report.listSubtitle)
+                        HStack {
+                            Text(report.listTitle)
+                                .font(AppStyle.Typography.headline)
+                                .foregroundColor(AppStyle.textColor)
+                            Spacer()
+                            if report.caseNumber > 0 {
+                                Text("\(report.caseNumber)")
+                                    .font(AppStyle.Typography.caption)
+                                    .foregroundColor(AppStyle.secondaryTextColor)
+                            }
+                        }
+                        Text(dateAndPlaceLine(for: report))
                             .font(AppStyle.Typography.subheadline)
                             .foregroundColor(AppStyle.secondaryTextColor)
+                        if !report.listConditionSummary.isEmpty {
+                            Text(report.listConditionSummary)
+                                .font(AppStyle.Typography.subheadline)
+                                .foregroundColor(AppStyle.textColor)
+                                .lineLimit(2)
+                        }
                     }
                     .padding(.vertical, AppStyle.Spacing.small)
                 }
@@ -293,7 +313,7 @@ enum CaseLogPrintPDF {
                 ctx.beginPage(withBounds: paperRect, pageInfo: [:])
                 var y = contentRect.minY
 
-                // Page 1: Match printLayout.png — "Embalmer's Report" (left), "Case Number" (right)
+                // Page 1: "Embalmer's Report" (left), "Case Number" (right)
                 ("Embalmer's Report" as NSString).draw(at: CGPoint(x: contentRect.minX, y: y), withAttributes: [.font: titleFont])
                 let caseNumStr = report.caseNumber > 0 ? "Case Number \(report.caseNumber)" : "Case Number \(val(String(report.id.prefix(8))))"
                 (caseNumStr as NSString).draw(at: CGPoint(x: contentRect.maxX - (caseNumStr as NSString).size(withAttributes: [.font: rowFont]).width, y: y + 1), withAttributes: [.font: rowFont, .foregroundColor: UIColor.darkGray])

@@ -136,20 +136,23 @@ struct CaseLogReport: Identifiable, Codable, Hashable {
         return s
     }
 
-    /// Display title for list: decedent name or "Untitled" with date.
+    /// Display name for list: decedent name or "Untitled".
     var listTitle: String {
-        if !decedentName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return decedentName
-        }
-        return "Untitled"
+        let name = decedentName.trimmingCharacters(in: .whitespacesAndNewlines)
+        return name.isEmpty ? "Untitled" : name
     }
 
-    /// Short subtitle for list (e.g. date of embalming or created date).
+    /// Short subtitle for list (date of death or created date).
     var listSubtitle: String {
-        if !dateOfEmbalming.isEmpty { return dateOfEmbalming }
+        if !dateOfDeath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return dateOfDeath }
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         return formatter.string(from: createdAt)
+    }
+
+    /// Condition / case type summary for list (empty if not set).
+    var listConditionSummary: String {
+        conditionSummary.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
 

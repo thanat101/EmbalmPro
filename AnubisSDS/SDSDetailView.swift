@@ -260,7 +260,7 @@ private struct FullSDSSheetView: View {
     
     private func getHazardSymbols() -> [String] {
         var symbols: [String] = []
-        let query = "SELECT HAZARD_GHS02, HAZARD_GHS05, HAZARD_GHS06, HAZARD_GHS07, HAZARD_GHS08, HAZARD_STOT, HAZARD_ASP FROM FLUID WHERE FLUID = '\(viewModel.fluid.name)'"
+        let query = "SELECT HAZARD_GHS02, HAZARD_GHS05, HAZARD_GHS06, HAZARD_GHS07, HAZARD_GHS08, HAZARD_GHS09, HAZARD_STOT, HAZARD_ASP FROM FLUID WHERE FLUID = '\(viewModel.fluid.name)'"
         if let result = DatabaseManager.shared.executeQuery(query) {
             if let row = result.first {
                 let ghs02 = (row["HAZARD_GHS02"] as? NSNumber)?.intValue ?? 0
@@ -268,6 +268,7 @@ private struct FullSDSSheetView: View {
                 let ghs06 = (row["HAZARD_GHS06"] as? NSNumber)?.intValue ?? 0
                 let ghs07 = (row["HAZARD_GHS07"] as? NSNumber)?.intValue ?? 0
                 let ghs08 = (row["HAZARD_GHS08"] as? NSNumber)?.intValue ?? 0
+                let ghs09 = (row["HAZARD_GHS09"] as? NSNumber)?.intValue ?? 0
                 let stot = (row["HAZARD_STOT"] as? NSNumber)?.intValue ?? 0
                 let asp = (row["HAZARD_ASP"] as? NSNumber)?.intValue ?? 0
                 
@@ -276,11 +277,19 @@ private struct FullSDSSheetView: View {
                 if ghs06 == 1 { symbols.append("GHS06") }
                 if ghs07 == 1 { symbols.append("GHS07") }
                 if ghs08 == 1 { symbols.append("GHS08") }
+                if ghs09 == 1 { symbols.append("GHS09") }
                 if stot == 1 { symbols.append("GHS08") }
                 if asp == 1 { symbols.append("GHS08") }
             }
         }
-        return symbols
+        // Ensure each symbol appears at most once, in first-seen order
+        var unique: [String] = []
+        for symbol in symbols {
+            if !unique.contains(symbol) {
+                unique.append(symbol)
+            }
+        }
+        return unique
     }
     
     var body: some View {
@@ -493,7 +502,7 @@ private struct SDSHeaderView: View {
     
     private func getHazardSymbols() -> [String] {
         var symbols: [String] = []
-        let query = "SELECT HAZARD_GHS02, HAZARD_GHS05, HAZARD_GHS06, HAZARD_GHS07, HAZARD_GHS08, HAZARD_STOT, HAZARD_ASP FROM FLUID WHERE FLUID = '\(fluid.name)'"
+        let query = "SELECT HAZARD_GHS02, HAZARD_GHS05, HAZARD_GHS06, HAZARD_GHS07, HAZARD_GHS08, HAZARD_GHS09, HAZARD_STOT, HAZARD_ASP FROM FLUID WHERE FLUID = '\(fluid.name)'"
         if let result = DatabaseManager.shared.executeQuery(query) {
             if let row = result.first {
                 let ghs02 = (row["HAZARD_GHS02"] as? NSNumber)?.intValue ?? 0
@@ -501,6 +510,7 @@ private struct SDSHeaderView: View {
                 let ghs06 = (row["HAZARD_GHS06"] as? NSNumber)?.intValue ?? 0
                 let ghs07 = (row["HAZARD_GHS07"] as? NSNumber)?.intValue ?? 0
                 let ghs08 = (row["HAZARD_GHS08"] as? NSNumber)?.intValue ?? 0
+                let ghs09 = (row["HAZARD_GHS09"] as? NSNumber)?.intValue ?? 0
                 let stot = (row["HAZARD_STOT"] as? NSNumber)?.intValue ?? 0
                 let asp = (row["HAZARD_ASP"] as? NSNumber)?.intValue ?? 0
                 
@@ -509,6 +519,7 @@ private struct SDSHeaderView: View {
                 if ghs06 == 1 { symbols.append("GHS06") }
                 if ghs07 == 1 { symbols.append("GHS07") }
                 if ghs08 == 1 { symbols.append("GHS08") }
+                if ghs09 == 1 { symbols.append("GHS09") }
                 if stot == 1 { symbols.append("GHS08") }
                 if asp == 1 { symbols.append("GHS08") }
             }

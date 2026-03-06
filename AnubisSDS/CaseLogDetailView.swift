@@ -221,9 +221,11 @@ struct CaseLogDetailView: View {
         .navigationTitle(isNewReport ? "New report" : "Embalmer's report")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") {
-                    dismiss.callAsFunction()
+            if isNewReport {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss.callAsFunction()
+                    }
                 }
             }
             ToolbarItem(placement: .confirmationAction) {

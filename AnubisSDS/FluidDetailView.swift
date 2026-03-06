@@ -22,29 +22,22 @@ private struct FluidHeaderView: View {
         
         // Check each hazard field
         let ghs02 = getValue(for: "HAZARD_GHS02", in: row, headers: headers)
-        if ghs02 == "1" {
-            symbols.append("GHS02")
-        }
+        if ghs02 == "1" { symbols.append("GHS02") }
         
         let ghs05 = getValue(for: "HAZARD_GHS05", in: row, headers: headers)
-        if ghs05 == "1" {
-            symbols.append("GHS05")
-        }
+        if ghs05 == "1" { symbols.append("GHS05") }
         
         let ghs06 = getValue(for: "HAZARD_GHS06", in: row, headers: headers)
-        if ghs06 == "1" {
-            symbols.append("GHS06")
-        }
+        if ghs06 == "1" { symbols.append("GHS06") }
         
         let ghs07 = getValue(for: "HAZARD_GHS07", in: row, headers: headers)
-        if ghs07 == "1" {
-            symbols.append("GHS07")
-        }
+        if ghs07 == "1" { symbols.append("GHS07") }
         
         let ghs08 = getValue(for: "HAZARD_GHS08", in: row, headers: headers)
-        if ghs08 == "1" {
-            symbols.append("GHS08")
-        }
+        if ghs08 == "1" { symbols.append("GHS08") }
+
+        let ghs09 = getValue(for: "HAZARD_GHS09", in: row, headers: headers)
+        if ghs09 == "1" { symbols.append("GHS09") }
         
         let stot = getValue(for: "HAZARD_STOT", in: row, headers: headers)
         if stot == "1" {
@@ -56,7 +49,14 @@ private struct FluidHeaderView: View {
             symbols.append("GHS08") // ASP uses GHS08
         }
         
-        return symbols
+        // Ensure each symbol appears at most once, in first-seen order
+        var unique: [String] = []
+        for symbol in symbols {
+            if !unique.contains(symbol) {
+                unique.append(symbol)
+            }
+        }
+        return unique
     }
     
     var body: some View {
