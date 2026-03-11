@@ -94,128 +94,549 @@ struct CaseLogDetailView: View {
     private var isNewReport: Bool { report == nil }
     private var reportId: String { report?.id ?? draftReportId }
 
-    var body: some View {
-        Form {
-            // MARK: Case number (top, editable)
-            Section {
-                LabeledField(title: "Case number", text: $caseNumber, placeholder: "Auto-assigned for new cases")
-                    .keyboardType(.numberPad)
-            } header: {
-                Text("Case number")
-            } footer: {
-                Text("Optional. New cases get the next number automatically; you can edit it.")
-            }
+    // Internal Date state for picker/quick buttons (string fields remain the source of truth for DB/printing)
+    @State private var dateOfDeathDate: Date = Date()
+    @State private var dateOfEmbalmingDate: Date = Date()
 
-            // MARK: Section 1 – Decedent & death
-            Section {
-                LabeledField(title: "Decedent name", text: $decedentName)
-                LabeledField(title: "Gender", text: $gender)
-                LabeledField(title: "Age", text: $age)
-                LabeledField(title: "Race", text: $race)
-                LabeledField(title: "Date of death", text: $dateOfDeath)
-                LabeledField(title: "Place of death", text: $placeOfDeath)
-            } header: {
-                Text("Decedent & death")
-            } footer: {
-                Text("Decedent identification and death information.")
-            }
+    private static let caseLogDateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.dateFormat = "M/d/yyyy" // matches examples like 2/28/2025
+        return f
+    }()
 
-            // MARK: Section 2 – Facility & embalmer
-            Section {
-                LabeledField(title: "Facility name", text: $facilityName)
-                LabeledField(title: "Embalmer name", text: $embalmerName)
-                LabeledField(title: "Embalming date", text: $dateOfEmbalming)
-                LabeledField(title: "Embalming time / finish", text: $embalmingTimeFinish, placeholder: "e.g. start – finish")
-            } header: {
-                Text("Facility & embalmer")
-            } footer: {
-                Text("Where the case was performed and who performed it.")
-            }
+    // Cached list of co-injection fluid names for the dropdown.
+    @State private var coInjectionOptions: [String] = []
+    // Cached list of cavity chemical fluid names for the dropdown.
+    @State private var cavityChemicalOptions: [String] = []
+    // Cached list of disinfectant fluid names for the dropdown.
+    @State private var disinfectantOptions: [String] = []
 
-            // MARK: Section 3 – Body & condition
-            Section {
-                LabeledField(title: "Body weight", text: $bodyWeight, placeholder: "e.g. 200 lb")
-                LabeledField(title: "Body type", text: $bodyType, placeholder: "e.g. Average, High BMI, All Muscle")
-                LabeledField(title: "Condition / case type summary", text: $conditionSummary, axis: .vertical, lineLimit: 2...5)
-            } header: {
-                Text("Body & condition")
-            } footer: {
-                Text("Body characteristics and condition before embalming.")
-            }
+    private func setDateOfDeath(from date: Date) {
+        dateOfDeathDate = date
+        dateOfDeath = Self.caseLogDateFormatter.string(from: date)
+        // Prefill embalming date if it's currently empty
+        if dateOfEmbalming.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            setDateOfEmbalming(from: date)
+        }
+    }
 
-            // MARK: Section 4 – Fluids & solution
-            Section {
-                LabeledField(title: "Arterial fluid used", text: $arterialFluidUsed, axis: .vertical, lineLimit: 2...5)
-                LabeledField(title: "Co-injection", text: $coInjection)
-                LabeledField(title: "Cavity chemical", text: $cavityChemical)
-                LabeledField(title: "Solution / calculation details", text: $solutionDetails, placeholder: "e.g. Fluid Index, strength %, oz per gallon", axis: .vertical, lineLimit: 2...5)
-                LabeledField(title: "Disinfectant", text: $disinfectant)
-            } header: {
-                Text("Fluids & solution")
-            } footer: {
-                Text("Arterial, co-injection, cavity, and solution details. Solution details are often prefilled from CH₂O Calculator.")
-            }
+    private func setDateOfEmbalming(from date: Date) {
+        dateOfEmbalmingDate = date
+        dateOfEmbalming = Self.caseLogDateFormatter.string(from: date)
+    }
 
-            // MARK: Section 5 – Closure & technique
-            Section {
-                LabeledField(title: "Mouth closure", text: $mouthClosure, placeholder: "Injector needle or Ligature")
-                LabeledField(title: "Eye closure", text: $eyeClosure)
-                LabeledField(title: "Arteries injected", text: $arteriesInjected)
-                LabeledField(title: "Veins drained", text: $veinsDrained)
-                LabeledField(title: "Drainage method", text: $drainageMethod)
-                LabeledField(title: "Aspiration", text: $aspiration, placeholder: "Delayed or Immediate")
-            } header: {
-                Text("Closure & technique")
-            } footer: {
-                Text("Mouth and eye closure; injection and drainage technique.")
-            }
+    private func parseCaseLogDate(_ s: String) -> Date? {
+        let trimmed = s.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        return Self.caseLogDateFormatter.date(from: trimmed)
+    }
 
-            // MARK: Section 6 – After embalming & notes
-            Section {
-                LabeledField(title: "Condition after embalming", text: $conditionAfterEmbalming, axis: .vertical, lineLimit: 2...5)
-                LabeledField(title: "Embalmer notes", text: $notes, axis: .vertical, lineLimit: 4...10)
-            } header: {
-                Text("After embalming & notes")
-            } footer: {
-                Text("Final condition and any additional notes.")
+    private func loadCoInjectionOptionsIfNeeded() {
+        if !coInjectionOptions.isEmpty { return }
+        func buildOptions(from fluids: [Fluid]) -> [String] {
+            var list = fluids
+            // Respect manufacturer filter from Fluids view, if any.
+            if let allowed = ManufacturerFilterStorage.allowedManufacturersForCaseAnalysis(), !allowed.isEmpty {
+                list = list.filter { allowed.contains($0.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines)) }
             }
+            return list
+                .filter { ($0.type ?? "").lowercased().contains("co-injection fluid") }
+                .map { $0.name }
+                .sorted()
+        }
+        // Prefer cached fluids if available to avoid extra DB hits.
+        if let cached = DatabaseManager.shared.getCachedFluids() {
+            coInjectionOptions = buildOptions(from: cached.fluids)
+            return
+        }
+        // Fallback: refresh cache once, then try again.
+        DatabaseManager.shared.updateFluidsCache()
+        if let cached = DatabaseManager.shared.getCachedFluids() {
+            coInjectionOptions = buildOptions(from: cached.fluids)
+        }
+    }
 
-            // MARK: Section – Body outlines (tap to add numbered areas), then condition below
-            Section {
-                VStack(alignment: .leading, spacing: AppStyle.Spacing.medium) {
-                    Text("Body – front")
-                        .font(AppStyle.Typography.headline)
-                        .foregroundColor(AppStyle.secondaryTextColor)
-                    TappableBodyView(
-                        imageName: "BodyFront",
-                        side: "front",
-                        marks: $bodyMarks
+    private func loadCavityChemicalOptionsIfNeeded() {
+        if !cavityChemicalOptions.isEmpty { return }
+        func buildOptions(from fluids: [Fluid]) -> [String] {
+            var list = fluids
+            // Respect manufacturer filter from Fluids view, if any.
+            if let allowed = ManufacturerFilterStorage.allowedManufacturersForCaseAnalysis(), !allowed.isEmpty {
+                list = list.filter { allowed.contains($0.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines)) }
+            }
+            return list
+                .filter { ($0.type ?? "").lowercased().contains("cavity embalming fluid") }
+                .map { $0.name }
+                .sorted()
+        }
+        if let cached = DatabaseManager.shared.getCachedFluids() {
+            cavityChemicalOptions = buildOptions(from: cached.fluids)
+            return
+        }
+        DatabaseManager.shared.updateFluidsCache()
+        if let cached = DatabaseManager.shared.getCachedFluids() {
+            cavityChemicalOptions = buildOptions(from: cached.fluids)
+        }
+    }
+
+    private func loadDisinfectantOptionsIfNeeded() {
+        if !disinfectantOptions.isEmpty { return }
+        func buildOptions(from fluids: [Fluid]) -> [String] {
+            var list = fluids
+            // Respect manufacturer filter from Fluids view, if any.
+            if let allowed = ManufacturerFilterStorage.allowedManufacturersForCaseAnalysis(), !allowed.isEmpty {
+                list = list.filter { allowed.contains($0.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines)) }
+            }
+            return list
+                .filter { ($0.use ?? "").lowercased().contains("disinfectant") }
+                .map { $0.name }
+                .sorted()
+        }
+        if let cached = DatabaseManager.shared.getCachedFluids() {
+            disinfectantOptions = buildOptions(from: cached.fluids)
+            return
+        }
+        DatabaseManager.shared.updateFluidsCache()
+        if let cached = DatabaseManager.shared.getCachedFluids() {
+            disinfectantOptions = buildOptions(from: cached.fluids)
+        }
+    }
+
+    // MARK: - Section builders (helps Canvas type-check smaller expressions)
+
+    private var caseNumberSection: some View {
+        Section {
+            LabeledField(title: "Case number", text: $caseNumber, placeholder: "Auto-assigned for new cases")
+                .keyboardType(.numberPad)
+        } header: {
+            Text("Case number")
+        } footer: {
+            Text("Optional. New cases get the next number automatically; you can edit it.")
+        }
+    }
+
+    private var decedentSection: some View {
+        Section {
+            LabeledField(title: "Decedent name", text: $decedentName)
+            LabeledField(title: "Gender", text: $gender)
+            LabeledField(title: "Age", text: $age)
+            LabeledField(title: "Race", text: $race)
+            // Date of death: text field and compact date picker on the same row
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Date of death")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                HStack(spacing: 8) {
+                    TextField("Date of death", text: $dateOfDeath)
+                    Spacer()
+                    DatePicker(
+                        "",
+                        selection: Binding(
+                            get: { dateOfDeathDate },
+                            set: { setDateOfDeath(from: $0) }
+                        ),
+                        displayedComponents: .date
                     )
-                    Text("Body – back")
-                        .font(AppStyle.Typography.headline)
-                        .foregroundColor(AppStyle.secondaryTextColor)
-                    TappableBodyView(
-                        imageName: "BodyBack",
-                        side: "back",
-                        marks: $bodyMarks
-                    )
+                    .labelsHidden()
+                    .datePickerStyle(.compact)
+                    .frame(maxWidth: 140)
                 }
-                .padding(.vertical, AppStyle.Spacing.small)
-                LabeledField(title: "Condition of remains when received", text: $conditionOfRemainsWhenReceived, axis: .vertical, lineLimit: 3...8)
-            } header: {
-                Text("Condition when received")
-            } footer: {
-                Text("Tap to add a numbered area; tap the same spot again to remove it. Numbers continue from front to back (1, 2, 3…). Describe each area below.")
             }
+            LabeledField(title: "Place of death", text: $placeOfDeath)
+        } header: {
+            Text("Decedent & death")
+        } footer: {
+            Text("Decedent identification and death information.")
+        }
+    }
 
-            if !isNewReport {
-                Section {
-                    Button(role: .destructive) {
-                        showDeleteConfirm = true
-                    } label: {
-                        Label("Delete report", systemImage: "trash")
+    private var facilitySection: some View {
+        Section {
+            LabeledField(title: "Facility name", text: $facilityName)
+            LabeledField(title: "Embalmer name", text: $embalmerName)
+            // Embalming date: text field and compact date picker on the same row
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Embalming date")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                HStack(spacing: 8) {
+                    TextField("Embalming date", text: $dateOfEmbalming)
+                    Spacer()
+                    DatePicker(
+                        "",
+                        selection: Binding(
+                            get: { dateOfEmbalmingDate },
+                            set: { setDateOfEmbalming(from: $0) }
+                        ),
+                        displayedComponents: .date
+                    )
+                    .labelsHidden()
+                    .datePickerStyle(.compact)
+                    .frame(maxWidth: 140)
+                }
+            }
+            LabeledField(title: "Embalming time / finish", text: $embalmingTimeFinish, placeholder: "e.g. start – finish")
+        } header: {
+            Text("Facility & embalmer")
+        } footer: {
+            Text("Where the case was performed and who performed it.")
+        }
+    }
+
+    private var bodySectionView: some View {
+        Section {
+            LabeledField(title: "Body weight", text: $bodyWeight, placeholder: "e.g. 200 lb")
+            LabeledField(title: "Body type", text: $bodyType, placeholder: "e.g. Average, High BMI, All Muscle")
+            LabeledField(title: "Condition / case type summary", text: $conditionSummary, axis: .vertical, lineLimit: 2...5)
+        } header: {
+            Text("Body & condition")
+        } footer: {
+            Text("Body characteristics and condition before embalming.")
+        }
+    }
+
+    private var fluidsSection: some View {
+        Section {
+            LabeledField(title: "Arterial fluid used", text: $arterialFluidUsed, axis: .vertical, lineLimit: 2...5)
+            // Co-injection: free text plus dropdown of matching fluids (from Fluids view data)
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Co-injection")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                HStack(spacing: 8) {
+                    TextField("Co-injection", text: $coInjection)
+                    if !coInjectionOptions.isEmpty {
+                        Menu {
+                            ForEach(coInjectionOptions, id: \.self) { option in
+                                Button(option) {
+                                    // Allow selecting multiple co-injection fluids; append if not already present.
+                                    let trimmed = coInjection.trimmingCharacters(in: .whitespacesAndNewlines)
+                                    if trimmed.isEmpty {
+                                        coInjection = option
+                                    } else if !trimmed.contains(option) {
+                                        coInjection = trimmed + ", " + option
+                                    }
+                                }
+                            }
+                        } label: {
+                            Image(systemName: "chevron.down")
+                                .foregroundColor(AppStyle.accentColor)
+                        }
                     }
                 }
+            }
+            // Cavity chemical: free text plus dropdown of matching cavity fluids
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Cavity chemical")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                HStack(spacing: 8) {
+                    TextField("Cavity chemical", text: $cavityChemical)
+                    if !cavityChemicalOptions.isEmpty {
+                        Menu {
+                            ForEach(cavityChemicalOptions, id: \.self) { option in
+                                Button(option) {
+                                    // Allow selecting multiple cavity chemicals; append if not already present.
+                                    let trimmed = cavityChemical.trimmingCharacters(in: .whitespacesAndNewlines)
+                                    if trimmed.isEmpty {
+                                        cavityChemical = option
+                                    } else if !trimmed.contains(option) {
+                                        cavityChemical = trimmed + ", " + option
+                                    }
+                                }
+                            }
+                        } label: {
+                            Image(systemName: "chevron.down")
+                                .foregroundColor(AppStyle.accentColor)
+                        }
+                    }
+                }
+            }
+            LabeledField(title: "Solution / calculation details", text: $solutionDetails, placeholder: "e.g. Fluid Index, strength %, oz per gallon", axis: .vertical, lineLimit: 2...5)
+            // Disinfectant: free text plus dropdown of matching disinfectant fluids (USE contains "DISINFECTANT")
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Disinfectant")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                HStack(spacing: 8) {
+                    TextField("Disinfectant", text: $disinfectant)
+                    if !disinfectantOptions.isEmpty {
+                        Menu {
+                            ForEach(disinfectantOptions, id: \.self) { option in
+                                Button(option) {
+                                    // Allow selecting multiple disinfectants; append if not already present.
+                                    let trimmed = disinfectant.trimmingCharacters(in: .whitespacesAndNewlines)
+                                    if trimmed.isEmpty {
+                                        disinfectant = option
+                                    } else if !trimmed.contains(option) {
+                                        disinfectant = trimmed + ", " + option
+                                    }
+                                }
+                            }
+                        } label: {
+                            Image(systemName: "chevron.down")
+                                .foregroundColor(AppStyle.accentColor)
+                        }
+                    }
+                }
+            }
+        } header: {
+            Text("Fluids & solution")
+        } footer: {
+            Text("Arterial, co-injection, cavity, and solution details. Solution details are often prefilled from CH₂O Calculator.")
+        }
+    }
+
+    private var closureSection: some View {
+        Section {
+            // Mouth closure: text field plus fixed choices (multi-select via comma-separated list)
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Mouth closure")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                HStack(spacing: 8) {
+                    TextField("Injector needle or Ligature", text: $mouthClosure)
+                    Menu {
+                        ForEach(["Injector Needle", "Ligature", "Glue", "Mouth Former"], id: \.self) { option in
+                            Button(option) {
+                                let trimmed = mouthClosure.trimmingCharacters(in: .whitespacesAndNewlines)
+                                if trimmed.isEmpty {
+                                    mouthClosure = option
+                                } else if !trimmed.contains(option) {
+                                    mouthClosure = trimmed + ", " + option
+                                }
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "chevron.down")
+                            .foregroundColor(AppStyle.accentColor)
+                    }
+                }
+            }
+            // Eye closure: text field plus fixed choices (multi-select)
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Eye closure")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                HStack(spacing: 8) {
+                    TextField("Eye closure", text: $eyeClosure)
+                    Menu {
+                        ForEach([
+                            "Cotton",
+                            "EyeCaps",
+                            "Glue",
+                            "Stay Cream",
+                            "Other"
+                        ], id: \.self) { option in
+                            Button(option) {
+                                let trimmed = eyeClosure.trimmingCharacters(in: .whitespacesAndNewlines)
+                                if trimmed.isEmpty {
+                                    eyeClosure = option
+                                } else if !trimmed.contains(option) {
+                                    eyeClosure = trimmed + ", " + option
+                                }
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "chevron.down")
+                            .foregroundColor(AppStyle.accentColor)
+                    }
+                }
+            }
+            // Arteries injected: text field plus fixed choices (multi-select)
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Arteries injected")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                HStack(spacing: 8) {
+                    TextField("Arteries injected", text: $arteriesInjected)
+                    Menu {
+                        ForEach([
+                            "Right Carotid",
+                            "Left Carotid",
+                            "Left Femoral",
+                            "Right Femoral",
+                            "Left Axillary",
+                            "Right Axillary",
+                            "6-Point",
+                            "Other"
+                        ], id: \.self) { option in
+                            Button(option) {
+                                let trimmed = arteriesInjected.trimmingCharacters(in: .whitespacesAndNewlines)
+                                if trimmed.isEmpty {
+                                    arteriesInjected = option
+                                } else if !trimmed.contains(option) {
+                                    arteriesInjected = trimmed + ", " + option
+                                }
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "chevron.down")
+                            .foregroundColor(AppStyle.accentColor)
+                    }
+                }
+            }
+            // Veins drained: text field plus fixed choices
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Veins drained")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                HStack(spacing: 8) {
+                    TextField("Veins drained", text: $veinsDrained)
+                    Menu {
+                        ForEach([
+                            "Right Jugular",
+                            "Left Jugular",
+                            "Left Femoral",
+                            "Right Femoral",
+                            "Left Axillary",
+                            "Right Axillary",
+                            "Other"
+                        ], id: \.self) { option in
+                            Button(option) {
+                                let trimmed = veinsDrained.trimmingCharacters(in: .whitespacesAndNewlines)
+                                if trimmed.isEmpty {
+                                    veinsDrained = option
+                                } else if !trimmed.contains(option) {
+                                    veinsDrained = trimmed + ", " + option
+                                }
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "chevron.down")
+                            .foregroundColor(AppStyle.accentColor)
+                    }
+                }
+            }
+            // Drainage method: text field plus fixed choices
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Drainage method")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                HStack(spacing: 8) {
+                    TextField("Drainage method", text: $drainageMethod)
+                    Menu {
+                        ForEach([
+                            "Drain Tube",
+                            "Forceps",
+                            "Birdcage",
+                            "Intermittent",
+                            "Continuous",
+                            "Closed"
+                        ], id: \.self) { option in
+                            Button(option) {
+                                let trimmed = drainageMethod.trimmingCharacters(in: .whitespacesAndNewlines)
+                                if trimmed.isEmpty {
+                                    drainageMethod = option
+                                } else if !trimmed.contains(option) {
+                                    drainageMethod = trimmed + ", " + option
+                                }
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "chevron.down")
+                            .foregroundColor(AppStyle.accentColor)
+                    }
+                }
+            }
+            // Aspiration: text field plus fixed choices
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Aspiration")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                HStack(spacing: 8) {
+                    TextField("Delayed or Immediate", text: $aspiration)
+                    Menu {
+                        ForEach([
+                            "Delayed",
+                            "Immediate",
+                            "Re-Aspirate (when)"
+                        ], id: \.self) { option in
+                            Button(option) {
+                                let trimmed = aspiration.trimmingCharacters(in: .whitespacesAndNewlines)
+                                if trimmed.isEmpty {
+                                    aspiration = option
+                                } else if !trimmed.contains(option) {
+                                    aspiration = trimmed + ", " + option
+                                }
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "chevron.down")
+                            .foregroundColor(AppStyle.accentColor)
+                    }
+                }
+            }
+        } header: {
+            Text("Closure & technique")
+        } footer: {
+            Text("Mouth and eye closure; injection and drainage technique.")
+        }
+    }
+
+    private var afterSection: some View {
+        Section {
+            LabeledField(title: "Condition after embalming", text: $conditionAfterEmbalming, axis: .vertical, lineLimit: 2...5)
+            LabeledField(title: "Embalmer notes", text: $notes, axis: .vertical, lineLimit: 4...10)
+        } header: {
+            Text("After embalming & notes")
+        } footer: {
+            Text("Final condition and any additional notes.")
+        }
+    }
+
+    private var conditionWhenReceivedSection: some View {
+        Section {
+            VStack(alignment: .leading, spacing: AppStyle.Spacing.medium) {
+                Text("Body – front")
+                    .font(AppStyle.Typography.headline)
+                    .foregroundColor(AppStyle.secondaryTextColor)
+                TappableBodyView(
+                    imageName: "BodyFront",
+                    side: "front",
+                    marks: $bodyMarks
+                )
+                Text("Body – back")
+                    .font(AppStyle.Typography.headline)
+                    .foregroundColor(AppStyle.secondaryTextColor)
+                TappableBodyView(
+                    imageName: "BodyBack",
+                    side: "back",
+                    marks: $bodyMarks
+                )
+            }
+            .padding(.vertical, AppStyle.Spacing.small)
+            LabeledField(title: "Condition of remains when received", text: $conditionOfRemainsWhenReceived, axis: .vertical, lineLimit: 3...8)
+        } header: {
+            Text("Condition when received")
+        } footer: {
+            Text("Tap to add a numbered area; tap the same spot again to remove it. Numbers continue from front to back (1, 2, 3…). Describe each area below.")
+        }
+    }
+
+    private var deleteSection: some View {
+        Section {
+            Button(role: .destructive) {
+                showDeleteConfirm = true
+            } label: {
+                Label("Delete report", systemImage: "trash")
+            }
+        }
+    }
+
+    var body: some View {
+        Form {
+            caseNumberSection
+            decedentSection
+            facilitySection
+            bodySectionView
+            fluidsSection
+            closureSection
+            afterSection
+            conditionWhenReceivedSection
+            if !isNewReport {
+                deleteSection
             }
         }
         .scrollDismissesKeyboard(.immediately)
@@ -304,6 +725,23 @@ struct CaseLogDetailView: View {
                     embalmerName = CaseLogDefaults.embalmer
                 }
             }
+            // Initialize Date pickers from existing string values (or default to today)
+            if let d = parseCaseLogDate(dateOfDeath) {
+                dateOfDeathDate = d
+            } else {
+                setDateOfDeath(from: Date())
+            }
+            if let d = parseCaseLogDate(dateOfEmbalming) {
+                dateOfEmbalmingDate = d
+            } else if let dod = parseCaseLogDate(dateOfDeath) {
+                // Prefill embalming date from date of death if not set
+                setDateOfEmbalming(from: dod)
+            } else {
+                setDateOfEmbalming(from: Date())
+            }
+            loadCoInjectionOptionsIfNeeded()
+            loadCavityChemicalOptionsIfNeeded()
+            loadDisinfectantOptionsIfNeeded()
         }
     }
 
