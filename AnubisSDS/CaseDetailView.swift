@@ -32,7 +32,7 @@ struct CaseDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: AppStyle.Spacing.large) {
-                // Condition name header
+                // Case Analysis: hierarchical (Case Type → Core Category → Risk Model), one card
                 VStack(alignment: .leading, spacing: AppStyle.Spacing.small) {
                     Text("CASE ANALYSIS")
                         .font(AppStyle.Typography.caption)
@@ -40,18 +40,26 @@ struct CaseDetailView: View {
                     Text(getValue(for: "CASE TYPE"))
                         .font(AppStyle.Typography.headline)
                         .foregroundColor(AppStyle.textColor)
-                }
-                .padding(.bottom, AppStyle.Spacing.medium)
-                .cardStyle()
-                
-                // Core Category
-                VStack(alignment: .leading, spacing: AppStyle.Spacing.small) {
-                    Text("Core Category")
-                        .font(AppStyle.Typography.caption)
-                        .foregroundColor(AppStyle.secondaryTextColor)
-                    Text(getValue(for: "CORECATEGORY"))
-                        .font(AppStyle.Typography.headline)
-                        .foregroundColor(AppStyle.textColor)
+                    // Sub-level: Core Category and Risk Model, one font size smaller
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(alignment: .top, spacing: 6) {
+                            Text("Core Category:")
+                                .font(AppStyle.Typography.subheadline)
+                                .foregroundColor(AppStyle.secondaryTextColor)
+                            Text(getValue(for: "CORECATEGORY"))
+                                .font(AppStyle.Typography.subheadline)
+                                .foregroundColor(AppStyle.textColor)
+                        }
+                        HStack(alignment: .top, spacing: 6) {
+                            Text("Risk Model:")
+                                .font(AppStyle.Typography.subheadline)
+                                .foregroundColor(AppStyle.secondaryTextColor)
+                            Text(getValue(for: "RISK MODEL"))
+                                .font(AppStyle.Typography.subheadline)
+                                .foregroundColor(AppStyle.textColor)
+                        }
+                    }
+                    .padding(.top, 4)
                 }
                 .padding(.bottom, AppStyle.Spacing.medium)
                 .cardStyle()
@@ -64,18 +72,21 @@ struct CaseDetailView: View {
                         .padding(.bottom, AppStyle.Spacing.small)
                     
                     ForEach(Array(headers.enumerated()), id: \.offset) { index, header in
-                        if index < condition.count {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(header)
-                                    .font(AppStyle.Typography.subheadline)
-                                    .foregroundColor(AppStyle.secondaryTextColor)
-                                
-                                Text(condition[index])
-                                    .font(AppStyle.Typography.body)
-                                    .foregroundColor(AppStyle.textColor)
-                                    .fixedSize(horizontal: false, vertical: true)
+                        // Skip fields already shown in dedicated cards
+                        if header != "CORECATEGORY" && header != "RISK MODEL" {
+                            if index < condition.count {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(header)
+                                        .font(AppStyle.Typography.subheadline)
+                                        .foregroundColor(AppStyle.secondaryTextColor)
+                                    
+                                    Text(condition[index])
+                                        .font(AppStyle.Typography.body)
+                                        .foregroundColor(AppStyle.textColor)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
+                                .padding(.vertical, 4)
                             }
-                            .padding(.vertical, 4)
                         }
                     }
                     
@@ -458,7 +469,7 @@ struct CaseDetailView: View {
             
             if let manufacturer = fluidManufacturer {
                 let count = manufacturerCounts[manufacturer] ?? 0
-                if count >= 3 {
+                if count >= 7 {
                     return nil
                 }
             }

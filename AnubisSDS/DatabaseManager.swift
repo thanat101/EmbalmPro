@@ -4,7 +4,7 @@ import SQLite3
 class DatabaseManager {
     static let shared = DatabaseManager()
     private var db: OpaquePointer?
-    private let databaseVersion = 9 // 8 = drop fluidsUsed; 9 = caseNumber
+    private let databaseVersion = 10 // 9 = caseNumber; 10 = CONDITIONS CORECATEGORY + RISK MODEL
     
     // Add static cache for fluids
     private static var cachedFluids: [Fluid]?
@@ -180,6 +180,15 @@ class DatabaseManager {
                 print("✅ Backfilled CASE_LOG.caseNumber by createdAt")
             }
         }
+        // Migration to v10: add CORECATEGORY and "RISK MODEL" to CONDITIONS so reset (INSERT from bundle) matches schema
+        if currentVersion < 10 && targetVersion >= 10 {
+            if sqlite3_exec(db, "ALTER TABLE CONDITIONS ADD COLUMN CORECATEGORY TEXT;", nil, nil, nil) == SQLITE_OK {
+                print("✅ Added CONDITIONS.CORECATEGORY")
+            }
+            if sqlite3_exec(db, "ALTER TABLE CONDITIONS ADD COLUMN \"RISK MODEL\" TEXT;", nil, nil, nil) == SQLITE_OK {
+                print("✅ Added CONDITIONS.\"RISK MODEL\"")
+            }
+        }
     }
     
     // Function to reset database to original state
@@ -246,6 +255,34 @@ class DatabaseManager {
         return true
     }
     
+    /// Ensures main.CONDITIONS has the same columns as bundle.CONDITIONS (adds missing). Call only when bundle is attached.
+    private func ensureConditionsColumnsMatchBundle(_ db: OpaquePointer?) {
+        guard let db = db else { return }
+        typealias Col = (name: String, type: String)
+        func tableInfo(_ schema: String) -> [Col] {
+            var stmt: OpaquePointer?
+            let sql = "PRAGMA \(schema).table_info(CONDITIONS);"
+            guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK, let stmt = stmt else { return [] }
+            defer { sqlite3_finalize(stmt) }
+            var cols: [Col] = []
+            while sqlite3_step(stmt) == SQLITE_ROW {
+                let name = String(cString: sqlite3_column_text(stmt, 1))
+                let type = sqlite3_column_text(stmt, 2).map { String(cString: $0) } ?? "TEXT"
+                cols.append((name, type))
+            }
+            return cols
+        }
+        let mainCols = Set(tableInfo("main").map(\.name))
+        for col in tableInfo("bundle") {
+            guard !mainCols.contains(col.name) else { continue }
+            let quoted = col.name.contains(" ") ? "\"\(col.name.replacingOccurrences(of: "\"", with: "\"\""))\"" : col.name
+            let alter = "ALTER TABLE main.CONDITIONS ADD COLUMN \(quoted) \(col.type);"
+            if sqlite3_exec(db, alter, nil, nil, nil) == SQLITE_OK {
+                print("✅ Added main.CONDITIONS.\(col.name) for reset")
+            }
+        }
+    }
+    
     /// Resets only reference tables (FLUID, CONDITIONS, GHS) from the bundle. Case Log is preserved.
     func resetReferenceDataOnly() -> Bool {
         guard let db = db else {
@@ -273,6 +310,9 @@ class DatabaseManager {
             sqlite3_exec(db, "DETACH DATABASE bundle;", nil, nil, nil)
             sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nil, nil, nil)
         }
+        
+        // Ensure main.CONDITIONS has same columns as bundle.CONDITIONS (e.g. CORECATEGORY, RISK MODEL) so INSERT SELECT * works
+        ensureConditionsColumnsMatchBundle(db)
         
         let tables = ["FLUID", "CONDITIONS", "GHS"]
         for table in tables {

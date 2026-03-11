@@ -7,27 +7,14 @@ struct SDSView: View {
     @State private var errorMessage = ""
     @State private var shouldResetNavigation = false
     
-    private let searchableFields = ["FLUID", "MANUFACTURER", "USE"]
-    
+    /// SDS search: fluid name and manufacturer only (fuzzy substring match).
     var filteredFluids: [Fluid] {
         if searchText.isEmpty {
             return fluids
         }
-        
-        let searchTextLower = searchText.lowercased()
+        let q = searchText.lowercased()
         return fluids.filter { fluid in
-            searchableFields.contains { field in
-                switch field {
-                case "FLUID":
-                    return fluid.name.lowercased().contains(searchTextLower)
-                case "MANUFACTURER":
-                    return fluid.manufacturer.lowercased().contains(searchTextLower)
-                case "USE":
-                    return fluid.use?.lowercased().contains(searchTextLower) ?? false
-                default:
-                    return false
-                }
-            }
+            fluid.name.lowercased().contains(q) || fluid.manufacturer.lowercased().contains(q)
         }
     }
     
@@ -52,28 +39,10 @@ struct SDSView: View {
                 }
                 .padding(.top, AppStyle.Spacing.small)
                 
-                // Search bar
-                HStack {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundColor(.gray)
-                    
-                    TextField("Search fluids...", text: $searchText)
-                        .textFieldStyle(PlainTextFieldStyle())
-                    
-                    if !searchText.isEmpty {
-                        Button(action: {
-                            searchText = ""
-                        }) {
-                            Image(systemName: "xmark.circle.fill")
-                                .foregroundColor(.gray)
-                        }
-                    }
-                }
-                .padding(8)
-                .background(Color(.systemGray6))
-                .cornerRadius(10)
-                .padding(.horizontal)
-                .padding(.top, AppStyle.Spacing.small)
+                // Search bar (same component as Fluids / Case / Favorites)
+                SearchBar(text: $searchText, placeholder: "Search fluids...")
+                    .padding(.horizontal)
+                    .padding(.top, AppStyle.Spacing.small)
                 
                 // List of fluids
                 if fluids.isEmpty {
