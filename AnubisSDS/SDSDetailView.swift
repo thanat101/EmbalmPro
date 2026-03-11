@@ -43,6 +43,7 @@ struct SDSSectionDetailView: View {
             }
             .padding()
         }
+        .scrollDismissesKeyboard(.immediately)
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {

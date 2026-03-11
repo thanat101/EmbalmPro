@@ -45,7 +45,7 @@ struct WelcomeView: View {
                             .font(.title2)
                             .fontWeight(.bold)
                         
-                        Text("1 week free, then $49.99/year")
+                        Text("1 week free, then $39.99/year")
                             .font(.title2)
                             .foregroundColor(.blue)
                         

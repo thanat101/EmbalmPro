@@ -388,6 +388,7 @@ struct FluidDetailView: View {
             }
             .padding(.vertical, AppStyle.Spacing.medium)
         }
+        .scrollDismissesKeyboard(.immediately)
         .background(Color(.systemGroupedBackground))
         .onAppear {
             if !fluidName.isEmpty {

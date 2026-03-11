@@ -35,7 +35,7 @@ struct CaseLogView: View {
                 listContent
             }
         }
-        .navigationTitle("Case Log")
+        .navigationTitle("Case Log - Embalmer's Report")
         .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(for: CaseLogReport.self) { report in
             CaseLogDetailView(report: report) {

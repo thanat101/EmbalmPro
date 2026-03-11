@@ -81,7 +81,7 @@ class CaseViewModel: ObservableObject {
         let query = """
             SELECT "CASE TYPE", "SOLUTION STRENGTH", "CH2O INDEX", "STRENGTH (%)", 
                    "SPECIAL TREATMENT", "SUGGESTED ACCESSORY/SUPPLIMENTAL", 
-                   "HUMECTANT", "INSTRUCTIONS"
+                   "HUMECTANT", "INSTRUCTIONS", "CORECATEGORY"
             FROM CONDITIONS 
             ORDER BY "CASE TYPE" ASC
         """

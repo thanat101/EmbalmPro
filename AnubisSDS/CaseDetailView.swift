@@ -44,6 +44,18 @@ struct CaseDetailView: View {
                 .padding(.bottom, AppStyle.Spacing.medium)
                 .cardStyle()
                 
+                // Core Category
+                VStack(alignment: .leading, spacing: AppStyle.Spacing.small) {
+                    Text("Core Category")
+                        .font(AppStyle.Typography.caption)
+                        .foregroundColor(AppStyle.secondaryTextColor)
+                    Text(getValue(for: "CORECATEGORY"))
+                        .font(AppStyle.Typography.headline)
+                        .foregroundColor(AppStyle.textColor)
+                }
+                .padding(.bottom, AppStyle.Spacing.medium)
+                .cardStyle()
+                
                 // Condition details
                 VStack(alignment: .leading, spacing: AppStyle.Spacing.medium) {
                     Text("Case Analysis Details")

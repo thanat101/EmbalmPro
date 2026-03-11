@@ -131,6 +131,7 @@ struct CH2OView: View {
                             Text("Strength (%)")
                                 .font(AppStyle.Typography.caption)
                                 .foregroundColor(AppStyle.secondaryTextColor)
+                                .frame(minHeight: 34)
                             CH2ODecimalField(placeholder: "2%", text: $viewModel.desiredStrength) {
                                 viewModel.calculationPerformed = false
                             }
@@ -142,6 +143,7 @@ struct CH2OView: View {
                             Text("Volume (oz)")
                                 .font(AppStyle.Typography.caption)
                                 .foregroundColor(AppStyle.secondaryTextColor)
+                                .frame(minHeight: 34)
                             CH2ODecimalField(
                                 placeholder: "128",
                                 text: Binding(
@@ -157,6 +159,7 @@ struct CH2OView: View {
                             Text("Index")
                                 .font(AppStyle.Typography.caption)
                                 .foregroundColor(AppStyle.secondaryTextColor)
+                                .frame(minHeight: 34)
                             CH2ODecimalField(placeholder: "25", text: $viewModel.fluidIndex) {
                                 viewModel.calculationPerformed = false
                             }

@@ -218,6 +218,7 @@ struct CaseLogDetailView: View {
                 }
             }
         }
+        .scrollDismissesKeyboard(.immediately)
         .navigationTitle(isNewReport ? "New report" : "Embalmer's report")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -504,9 +505,12 @@ private struct TappableBodyView: View {
                 }
                 Color.clear
                     .contentShape(Rectangle())
-                    .gesture(
+                    .simultaneousGesture(
                         DragGesture(minimumDistance: 0)
                             .onEnded { value in
+                                // Ignore scrolls: only add/remove on taps (minimal movement)
+                                let distance = hypot(value.translation.width, value.translation.height)
+                                if distance > 12 { return }
                                 let loc = value.startLocation
                                 guard imageRect.contains(loc) else { return }
                                 let nx = Double((loc.x - imageRect.minX) / imageRect.width).clamped(to: 0.0...1.0)

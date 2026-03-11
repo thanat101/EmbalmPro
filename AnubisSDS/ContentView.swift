@@ -92,14 +92,14 @@ struct ContentView: View {
                     .navigationBarTitleDisplayMode(.inline)
                     .toolbar {
                         ToolbarItem(placement: .principal) {
-                            Text("Case Log")
+                            Text("Case Log - Embalmer's Report")
                                 .font(AppStyle.Typography.headline)
                                 .foregroundColor(AppStyle.textColor)
                         }
                     }
             }
                     .tabItem {
-                        Label("Case Log", systemImage: "doc.text.fill")
+                        Label("Case Log - Embalmer's Report", systemImage: "doc.text.fill")
                     }
                     .tag(5)
         }
