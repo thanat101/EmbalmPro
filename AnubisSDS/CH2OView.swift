@@ -201,6 +201,19 @@ struct CH2OView: View {
 
                 if viewModel.calculationPerformed {
                     ResultsSection(viewModel: viewModel)
+
+                    // Inline link to save current calculation into an Embalmer's Report
+                    Button {
+                        showCaseLogSheet = true
+                    } label: {
+                        Text("Save these calculations into an Embalmer's Report")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(AppStyle.primaryColor)
+                            .underline()
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, 4)
+
                     FormaldehydeCalculationsSection(viewModel: viewModel)
                 }
 
