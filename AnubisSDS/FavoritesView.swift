@@ -79,6 +79,7 @@ struct FavoritesView: View {
     @StateObject private var viewModel = FavoritesViewModel()
     @State private var searchText = ""
     @State private var shouldResetNavigation = false
+    @Environment(\.dismiss) private var dismiss
     
     var filteredFluids: [Fluid] {
         if searchText.isEmpty {
@@ -95,6 +96,11 @@ struct FavoritesView: View {
             VStack(spacing: 0) {
                 // Header section
                 HStack {
+                    Button(action: { dismiss() }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(AppStyle.secondaryTextColor)
+                    }
+                    
                     Text("Favorite Fluids: \(filteredFluids.count)")
                         .font(AppStyle.Typography.subheadline)
                         .foregroundColor(AppStyle.secondaryTextColor)

@@ -54,7 +54,16 @@ struct ContentView: View {
                         Label("CH₂O", systemImage: "function")
                     }
                     .tag(2)
-                
+
+            NavigationStack {
+                CaseLogView()
+                    .navigationBarTitleDisplayMode(.inline)
+            }
+                    .tabItem {
+                        Label("Embalmer's Report", systemImage: "doc.text.fill")
+                    }
+                    .tag(5)
+
             NavigationStack {
                 SDSView()
                     .navigationBarTitleDisplayMode(.inline)
@@ -67,41 +76,9 @@ struct ContentView: View {
                     }
             }
                     .tabItem {
-                        Label("SDS", systemImage: "doc.text")
+                        Label("SDS", systemImage: "exclamationmark.triangle.fill")
                     }
                     .tag(3)
-                
-            NavigationStack {
-                FavoritesView()
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        ToolbarItem(placement: .principal) {
-                            Text("Favorites")
-                                .font(AppStyle.Typography.headline)
-                                .foregroundColor(AppStyle.textColor)
-                        }
-                    }
-            }
-                    .tabItem {
-                        Label("Favorites", systemImage: "star.fill")
-                    }
-                    .tag(4)
-            
-            NavigationStack {
-                CaseLogView()
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        ToolbarItem(placement: .principal) {
-                            Text("Case Log - Embalmer's Report")
-                                .font(AppStyle.Typography.headline)
-                                .foregroundColor(AppStyle.textColor)
-                        }
-                    }
-            }
-                    .tabItem {
-                        Label("Case Log - Embalmer's Report", systemImage: "doc.text.fill")
-                    }
-                    .tag(5)
         }
                     .id(selectedTab)
             .onChange(of: selectedTab) { _ in

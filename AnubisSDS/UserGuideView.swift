@@ -55,7 +55,7 @@ struct UserGuideView: View {
                         .font(AppStyle.Typography.headline)
                         .foregroundColor(AppStyle.primaryColor)
                         
-                        NavigationLink("7. Case Log") {
+                        NavigationLink("7. Embalmer's Report") {
                             CaseLogSection()
                         }
                         .font(AppStyle.Typography.headline)
@@ -195,7 +195,7 @@ struct NavigationSection: View {
                         Text("• CH₂O Calculator: Formaldehyde and dilution calculations")
                         Text("• SDS: Safety Data Sheets by section or full document")
                         Text("• Favorites: Quick access to frequently used fluids")
-                        Text("• Case Log: Create and manage embalmer's reports")
+                        Text("• Embalmer's Report: Create and manage case log reports")
                     }
                     .font(AppStyle.Typography.body)
                     .foregroundColor(AppStyle.textColor)
@@ -1097,7 +1097,7 @@ struct SymbolsSection: View {
                         IconRow(icon: "flask.fill", description: "Fluids")
                         IconRow(icon: "figure", description: "Case Analysis")
                         IconRow(icon: "function", description: "CH₂O Calculator")
-                        IconRow(icon: "doc.text", description: "SDS")
+                        IconRow(icon: "exclamationmark.triangle.fill", description: "SDS")
                         IconRow(icon: "star.fill", description: "Favorites")
                         IconRow(icon: "doc.text.fill", description: "Case Log")
                     }

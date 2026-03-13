@@ -193,6 +193,7 @@ struct FluidsView: View {
     @State private var errorMessage = ""
     @State private var shouldResetNavigation = false
     @State private var showWelcomeView = false
+    @State private var showFavoritesView = false
     
     private func resetView() {
         // Clear all filters (manufacturer multi-select → empty = show all)
@@ -207,9 +208,17 @@ struct FluidsView: View {
     
     var body: some View {
             VStack(spacing: 0) {
-            // Header section - keep only About and reload buttons
+            // Header section - favorites shortcut, About, and reload buttons
                 VStack(spacing: AppStyle.Spacing.small) {
                     HStack {
+                    Button(action: {
+                        showFavoritesView = true
+                    }) {
+                        Image(systemName: "star.fill")
+                            .font(.system(size: 20))
+                            .foregroundColor(AppStyle.accentColor)
+                    }
+                    
                     Spacer()
                     
                     // About button
@@ -354,6 +363,19 @@ struct FluidsView: View {
             )
         .onAppear {
             viewModel.loadData()
+        }
+        .sheet(isPresented: $showFavoritesView) {
+            NavigationStack {
+                FavoritesView()
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .principal) {
+                            Text("Favorites")
+                                .font(AppStyle.Typography.headline)
+                                .foregroundColor(AppStyle.textColor)
+                        }
+                    }
+            }
         }
         .onChange(of: viewModel.searchText) { _ in viewModel.updateFilteredData() }
         .onChange(of: viewModel.selectedManufacturers) { _ in viewModel.updateFilteredData() }

@@ -36,6 +36,8 @@ private struct LabeledField: View {
 private enum CaseLogDefaults {
     static let facilityKey = "CaseLogDefaultFacilityName"
     static let embalmerKey = "CaseLogDefaultEmbalmerName"
+    static let placesKey = "CaseLogDefaultPlacesOfDeath"
+    static let placesUsageKey = "CaseLogPlacesOfDeathUsage"
 
     static var facility: String {
         get { UserDefaults.standard.string(forKey: facilityKey) ?? "" }
@@ -45,6 +47,21 @@ private enum CaseLogDefaults {
     static var embalmer: String {
         get { UserDefaults.standard.string(forKey: embalmerKey) ?? "" }
         set { UserDefaults.standard.set(newValue, forKey: embalmerKey) }
+    }
+
+    static var placesOfDeath: [String] {
+        get { UserDefaults.standard.stringArray(forKey: placesKey) ?? [] }
+        set { UserDefaults.standard.set(newValue, forKey: placesKey) }
+    }
+
+    /// Tracks how many times each place of death has been used (for sorting by most-used).
+    static var placeUsage: [String: Int] {
+        get {
+            (UserDefaults.standard.dictionary(forKey: placesUsageKey) as? [String: Int]) ?? [:]
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: placesUsageKey)
+        }
     }
 }
 
@@ -90,6 +107,7 @@ struct CaseLogDetailView: View {
     @State private var bodyMarks: [BodyMark] = []
     @State private var draftReportId: String = ""
     @State private var showDeleteConfirm = false
+    @State private var recentPlacesOfDeath: [String] = []
 
     private var isNewReport: Bool { report == nil }
     private var reportId: String { report?.id ?? draftReportId }
@@ -203,6 +221,29 @@ struct CaseLogDetailView: View {
         }
     }
 
+    private func addCurrentPlaceOfDeathToRecents() {
+        let place = t(placeOfDeath)
+        guard !place.isEmpty else { return }
+
+        // Update usage counts
+        var usage = CaseLogDefaults.placeUsage
+        usage[place, default: 0] += 1
+        CaseLogDefaults.placeUsage = usage
+
+        // Build a unique list of places sorted by most-used (then alphabetically)
+        let sorted = usage.keys.sorted { lhs, rhs in
+            let cl = usage[lhs] ?? 0
+            let cr = usage[rhs] ?? 0
+            if cl != cr { return cl > cr }
+            return lhs.localizedCaseInsensitiveCompare(rhs) == .orderedAscending
+        }
+
+        // Cap to a reasonable maximum
+        let limited = Array(sorted.prefix(20))
+        CaseLogDefaults.placesOfDeath = limited
+        recentPlacesOfDeath = limited
+    }
+
     // MARK: - Section builders (helps Canvas type-check smaller expressions)
 
     private var caseNumberSection: some View {
@@ -219,9 +260,57 @@ struct CaseLogDetailView: View {
     private var decedentSection: some View {
         Section {
             LabeledField(title: "Decedent name", text: $decedentName)
-            LabeledField(title: "Gender", text: $gender)
+            // Gender: text field plus fixed choices
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Gender")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                HStack(spacing: 8) {
+                    TextField("Gender", text: $gender)
+                    Menu {
+                        ForEach([
+                            "Male",
+                            "Female",
+                            "Unknown",
+                            "Other"
+                        ], id: \.self) { option in
+                            Button(option) {
+                                gender = option
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "chevron.down")
+                            .foregroundColor(AppStyle.accentColor)
+                    }
+                }
+            }
             LabeledField(title: "Age", text: $age)
-            LabeledField(title: "Race", text: $race)
+            // Race: text field plus fixed choices
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Race")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                HStack(spacing: 8) {
+                    TextField("Race", text: $race)
+                    Menu {
+                        ForEach([
+                            "White",
+                            "Black or African American",
+                            "American Indian or Alaska Native",
+                            "Asian",
+                            "Native Hawaiian or Other Pacific Islander",
+                            "Other"
+                        ], id: \.self) { option in
+                            Button(option) {
+                                race = option
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "chevron.down")
+                            .foregroundColor(AppStyle.accentColor)
+                    }
+                }
+            }
             // Date of death: text field and compact date picker on the same row
             VStack(alignment: .leading, spacing: 4) {
                 Text("Date of death")
@@ -243,7 +332,27 @@ struct CaseLogDetailView: View {
                     .frame(maxWidth: 140)
                 }
             }
-            LabeledField(title: "Place of death", text: $placeOfDeath)
+            // Place of death: text field plus recent places dropdown (per-user, from UserDefaults)
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Place of death")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                HStack(spacing: 8) {
+                    TextField("Place of death", text: $placeOfDeath)
+                    if !recentPlacesOfDeath.isEmpty {
+                        Menu {
+                            ForEach(recentPlacesOfDeath, id: \.self) { option in
+                                Button(option) {
+                                    placeOfDeath = option
+                                }
+                            }
+                        } label: {
+                            Image(systemName: "chevron.down")
+                                .foregroundColor(AppStyle.accentColor)
+                        }
+                    }
+                }
+            }
         } header: {
             Text("Decedent & death")
         } footer: {
@@ -742,6 +851,7 @@ struct CaseLogDetailView: View {
             loadCoInjectionOptionsIfNeeded()
             loadCavityChemicalOptionsIfNeeded()
             loadDisinfectantOptionsIfNeeded()
+            recentPlacesOfDeath = CaseLogDefaults.placesOfDeath
         }
     }
 
@@ -753,6 +863,7 @@ struct CaseLogDetailView: View {
         let emb = t(embalmerName)
         if !fac.isEmpty { CaseLogDefaults.facility = fac }
         if !emb.isEmpty { CaseLogDefaults.embalmer = emb }
+        addCurrentPlaceOfDeathToRecents()
     }
 
     /// Builds the current report from form state (for printing, including unsaved edits).
