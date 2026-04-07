@@ -279,7 +279,7 @@ struct CaseLogDetailView: View {
                             }
                         }
                     } label: {
-                        Image(systemName: "chevron.down")
+                        Image(systemName: "chevron.down.circle")
                             .foregroundColor(AppStyle.accentColor)
                     }
                 }
@@ -306,7 +306,7 @@ struct CaseLogDetailView: View {
                             }
                         }
                     } label: {
-                        Image(systemName: "chevron.down")
+                        Image(systemName: "chevron.down.circle")
                             .foregroundColor(AppStyle.accentColor)
                     }
                 }
@@ -347,7 +347,7 @@ struct CaseLogDetailView: View {
                                 }
                             }
                         } label: {
-                            Image(systemName: "chevron.down")
+                            Image(systemName: "chevron.down.circle")
                                 .foregroundColor(AppStyle.accentColor)
                         }
                     }
@@ -429,7 +429,7 @@ struct CaseLogDetailView: View {
                                 }
                             }
                         } label: {
-                            Image(systemName: "chevron.down")
+                            Image(systemName: "chevron.down.circle")
                                 .foregroundColor(AppStyle.accentColor)
                         }
                     }
@@ -456,7 +456,7 @@ struct CaseLogDetailView: View {
                                 }
                             }
                         } label: {
-                            Image(systemName: "chevron.down")
+                            Image(systemName: "chevron.down.circle")
                                 .foregroundColor(AppStyle.accentColor)
                         }
                     }
@@ -484,7 +484,7 @@ struct CaseLogDetailView: View {
                                 }
                             }
                         } label: {
-                            Image(systemName: "chevron.down")
+                            Image(systemName: "chevron.down.circle")
                                 .foregroundColor(AppStyle.accentColor)
                         }
                     }
@@ -518,7 +518,7 @@ struct CaseLogDetailView: View {
                             }
                         }
                     } label: {
-                        Image(systemName: "chevron.down")
+                        Image(systemName: "chevron.down.circle")
                             .foregroundColor(AppStyle.accentColor)
                     }
                 }
@@ -548,7 +548,7 @@ struct CaseLogDetailView: View {
                             }
                         }
                     } label: {
-                        Image(systemName: "chevron.down")
+                        Image(systemName: "chevron.down.circle")
                             .foregroundColor(AppStyle.accentColor)
                     }
                 }
@@ -581,7 +581,7 @@ struct CaseLogDetailView: View {
                             }
                         }
                     } label: {
-                        Image(systemName: "chevron.down")
+                        Image(systemName: "chevron.down.circle")
                             .foregroundColor(AppStyle.accentColor)
                     }
                 }
@@ -613,7 +613,7 @@ struct CaseLogDetailView: View {
                             }
                         }
                     } label: {
-                        Image(systemName: "chevron.down")
+                        Image(systemName: "chevron.down.circle")
                             .foregroundColor(AppStyle.accentColor)
                     }
                 }
@@ -644,7 +644,7 @@ struct CaseLogDetailView: View {
                             }
                         }
                     } label: {
-                        Image(systemName: "chevron.down")
+                        Image(systemName: "chevron.down.circle")
                             .foregroundColor(AppStyle.accentColor)
                     }
                 }
@@ -672,7 +672,7 @@ struct CaseLogDetailView: View {
                             }
                         }
                     } label: {
-                        Image(systemName: "chevron.down")
+                        Image(systemName: "chevron.down.circle")
                             .foregroundColor(AppStyle.accentColor)
                     }
                 }

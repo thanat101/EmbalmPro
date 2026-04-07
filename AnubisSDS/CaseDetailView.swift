@@ -161,6 +161,11 @@ struct CaseDetailView: View {
                     Text("Suggested Use Fluids")
                         .font(AppStyle.Typography.title)
                         .foregroundColor(AppStyle.textColor)
+                        .padding(.bottom, 2)
+                    
+                    Text("Filtered by manufacturer(s) selected in the Fluids tab.")
+                        .font(AppStyle.Typography.caption)
+                        .foregroundColor(AppStyle.secondaryTextColor)
                         .padding(.bottom, AppStyle.Spacing.small)
                     
                     if relatedFluids.isEmpty {
